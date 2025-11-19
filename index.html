@@ -123,6 +123,138 @@ transition:all .3s ease;}
  border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.1);}
 </style>
 </head>
+
+<!-- WebSocket Message Broadcast - Embed Code -->
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+(function() {
+    // Connect to the WebSocket server
+    const socket = io('http://broadcastadmin.fischyweb.com');
+    
+    let messageBubble = null;
+    
+    // Create the floating message bubble
+    function createBubble(message, shutdownNotice) {
+        // Remove existing bubble if any
+        if (messageBubble) {
+            messageBubble.remove();
+        }
+        
+        // Don't create bubble if no message
+        if (!message && !shutdownNotice) return;
+        
+        // Create bubble element
+        messageBubble = document.createElement('div');
+        messageBubble.id = 'ws-message-bubble';
+        
+        // Style the bubble
+        messageBubble.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 999999;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            animation: slideIn 0.5s ease-out;
+        `;
+        
+        // Build content
+        let content = '';
+        if (message) {
+            content += `<div style="font-size: 14px; line-height: 1.6; margin-bottom: ${shutdownNotice ? '12px' : '0'};">${escapeHtml(message)}</div>`;
+        }
+        if (shutdownNotice) {
+            content += `<div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 6px; font-size: 13px; border-left: 3px solid #ffc107;">⚠️ ${escapeHtml(shutdownNotice)}</div>`;
+        }
+        
+        // Add close button
+        content += `<button onclick="this.parentElement.remove()" style="
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            transition: background 0.3s;
+        " onmouseover="this.style.background='rgba(255,255,255,0.5)'" onmouseout="this.style.background='rgba(255,255,255,0.3)'">×</button>`;
+        
+        messageBubble.innerHTML = content;
+        
+        // Add animation keyframes
+        if (!document.getElementById('ws-bubble-styles')) {
+            const style = document.createElement('style');
+            style.id = 'ws-bubble-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(450px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Add to page
+        document.body.appendChild(messageBubble);
+    }
+    
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Listen for broadcast messages
+    socket.on('broadcast_message', function(data) {
+        console.log('📢 Received broadcast message:', data);
+        createBubble(data.message, data.shutdown_notice);
+    });
+    
+    // Listen for clear message event
+    socket.on('clear_messages', function() {
+        console.log('🗑️ Messages cleared');
+        if (messageBubble) {
+            messageBubble.remove();
+            messageBubble = null;
+        }
+    });
+    
+    // Request last message when connected
+    socket.on('connect', function() {
+        console.log('✅ Connected to WebSocket server');
+        socket.emit('request_last_message');
+    });
+    
+    // Receive last message (for persistence)
+    socket.on('last_message', function(data) {
+        if (data.message || data.shutdown_notice) {
+            createBubble(data.message, data.shutdown_notice);
+        }
+    });
+    
+    socket.on('disconnect', function() {
+        console.log('❌ Disconnected from WebSocket server');
+    });
+})();
+</script>
+  
 <body>
 <!-- Login -->
 <div class="card" id="auth">
