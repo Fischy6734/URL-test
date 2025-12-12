@@ -20,12 +20,20 @@
   --red:#d32f2f;
   --blue:#1976d2;
   --purple:#7b1fa2;
+
+  /* update-specific colors */
+  --update-text:#333;
+  --muted:#666;
 }
 body.dark{
   --bg:#222;
   --dark:#fafafa;
   --white:#222;
   --gray:#333;
+
+  /* lighter update text in dark mode */
+  --update-text:#e6e6e6;
+  --muted:#bbb;
 }
 /* ---------------------------------------------------- */
 /* 2. Reset & base layout */
@@ -118,9 +126,34 @@ transition:all .3s ease;}
 /* 6. Server status & updates */
 #serverStatus, #serverUpdates{background:var(--gray);border-radius:6px;padding:1rem;
  margin-top:1rem;width:90%;max-width:440px;}
-#serverUpdates ul{list-style:none;padding:0;}
+#serverUpdates ul{list-style:none;padding:0; margin:0; display:block;}
+
+/* keep the updates box bounded and scrollable so it doesn't push login off-screen */
+#serverUpdates{max-height:260px; overflow:auto;}
 #serverUpdates li{margin-bottom:.5rem;padding:.5rem;background:var(--white);
  border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.1);}
+
+/* title remains bold */
+.update-title{font-weight:700;display:block;margin-bottom:6px; color:var(--dark);}
+
+/* CHANGED:
+   Allow the message to expand (no forced truncation) and preserve whitespace/newlines.
+   The updates container itself remains scrollable (so long messages don't push the whole page).
+*/
+.update-message{
+  display:block;
+  color:var(--update-text);
+  white-space:pre-wrap;   /* preserve newlines and wrap long lines */
+  word-break:break-word;  /* avoid overflow from long tokens/URLs */
+  max-height:none;        /* remove the per-item cutoff */
+  overflow:visible;
+}
+
+/* placeholder style when there are no updates */
+#updatesList .no-updates{font-style:italic;color:var(--muted);padding:.4rem;}
+/* small control row in header */
+#serverUpdates .controls{margin-top:6px;display:flex;gap:6px;align-items:center;}
+#updatesHint{color:var(--muted);}
 </style>
 </head>
 
@@ -284,8 +317,13 @@ transition:all .3s ease;}
 </div>
 
 <!-- Server updates -->
-<div id="serverUpdates" style="display:none;">
+<div id="serverUpdates">
   <h3>Server Updates</h3>
+  <div class="controls">
+    <button id="retryUpdates" class="smallBtn" title="Retry fetching updates">Retry</button>
+    <button id="toggleUpdates" class="smallBtn" title="Hide/Show updates">Hide</button>
+    <small id="updatesHint" style="margin-left:8px;">(latest shown)</small>
+  </div>
   <ul id="updatesList"></ul>
 </div>
 
@@ -293,6 +331,13 @@ transition:all .3s ease;}
 const SERVER_URL = "https://keyserver.fischyweb.com/";
 let keyList = [];
 let currentKey = null; // authenticated key
+
+const CACHE_KEY = 'cachedServerUpdates';
+const CACHE_TS_KEY = 'cachedServerUpdatesTs';
+
+// configurable limits
+const MAX_UPDATES = 20;            // keep only the latest N updates
+const MAX_MESSAGE_LENGTH = 400;    // used when truncation is desired; not forced now
 
 const RANKS = [
   {id:"overlord", name:"Overlord", features:["Unlimited access","Priority support","2FA by default","Custom branding"]},
@@ -314,37 +359,191 @@ async function sha256Hex(str){
 }
 
 // --------------------------------------------------------------------------
+// Helpers: strip HTML, truncate (optional), linkify safely (create elements, no innerHTML)
+function stripHtml(input){
+  if(!input) return '';
+  try{
+    const doc = new DOMParser().parseFromString(input, 'text/html');
+    return doc.body ? doc.body.textContent || '' : String(input);
+  }catch(e){
+    return String(input);
+  }
+}
+
+function truncateText(text, maxLen){
+  if(!text) return '';
+  if(text.length <= maxLen) return text;
+  return text.slice(0, maxLen-1) + '…';
+}
+
+function linkifyToFragment(text){
+  const fragment = document.createDocumentFragment();
+  if(!text) return fragment;
+  const urlRegex = /((https?:\/\/|ftp:\/\/)[\w-+&@#/%?=~_|!:,.;()$[\]*'%-]+)/gi;
+  let lastIndex = 0;
+  let m;
+  while((m = urlRegex.exec(text)) !== null){
+    const url = m[0];
+    const idx = m.index;
+    if(idx > lastIndex){
+      fragment.appendChild(document.createTextNode(text.slice(lastIndex, idx)));
+    }
+    const a = document.createElement('a');
+    a.href = url;
+    a.textContent = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.style.color = '#1976d2';
+    a.style.textDecoration = 'underline';
+    fragment.appendChild(a);
+    lastIndex = idx + url.length;
+  }
+  if(lastIndex < text.length){
+    fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+  return fragment;
+}
+
+// --------------------------------------------------------------------------
+// Render updates array into the DOM (safely)
+function renderUpdatesFromArray(arr, meta){
+  const ul = document.getElementById("updatesList");
+  ul.innerHTML = '';
+
+  if(!Array.isArray(arr) || arr.length === 0){
+    ul.innerHTML = '<li class="no-updates">No updates available.</li>';
+    return;
+  }
+
+  // take last MAX_UPDATES and render newest-first
+  const recent = arr.slice(-MAX_UPDATES).reverse();
+
+  recent.forEach(u=>{
+    const li = document.createElement('li');
+    const title = document.createElement('span');
+    title.className = 'update-title';
+    title.textContent = (u.title || 'Update');
+
+    const msgContainer = document.createElement('div');
+    msgContainer.className = 'update-message';
+
+    // strip HTML from incoming message, keep newlines, linkify
+    const plain = stripHtml(u.message || '');
+    // don't force truncation; show full text (container scrolls)
+    const frag = linkifyToFragment(plain);
+    msgContainer.appendChild(frag);
+
+    li.appendChild(title);
+    li.appendChild(msgContainer);
+    ul.appendChild(li);
+  });
+
+  const hint = document.getElementById('updatesHint');
+  if(meta && meta.source){
+    hint.textContent = meta.source === 'cache' 
+      ? `(showing cached updates from ${meta.cachedAt})` 
+      : `(latest shown)`;
+  } else {
+    hint.textContent = '(latest shown)';
+  }
+}
+
+// --------------------------------------------------------------------------
 // Fetch server status & updates
 async function fetchStatus(){
   try{
-    const res = await fetch(SERVER_URL+"/api/status");
+    const res = await fetch(SERVER_URL + "/api/status");
     const data = await res.json();
     document.getElementById("srvHealth").textContent = data.health;
-    document.getElementById("srvUptime").textContent = data.uptime_seconds+"s";
+    document.getElementById("srvUptime").textContent = data.uptime_seconds + "s";
     document.getElementById("srvCPU").textContent = data.cpu_percent;
     document.getElementById("srvMem").textContent = data.memory_percent;
     document.getElementById("srvUsers").textContent = data.user_count;
-    document.getElementById("serverStatus").style.display="block";
-  }catch(e){ console.log("Cannot reach server:", e); }
+    document.getElementById("serverStatus").style.display = "block";
+  }catch(e){
+    console.log("Cannot reach server status:", e);
+  }
 }
-async function fetchUpdates(){
+
+/*
+  fetchUpdates:
+  - fetches updates, caches them, falls back to cached data if fetch fails
+  - messages are no longer truncated in the item itself; the updates box scrolls
+*/
+async function fetchUpdates(forceNetwork = false){
+  const ul = document.getElementById("updatesList");
+  ul.innerHTML = '<li class="no-updates">Loading updates…</li>';
+
   try{
-    const res = await fetch(SERVER_URL+"/api/updates");
+    const res = await fetch(SERVER_URL + "/api/updates", {mode: 'cors'});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const ul = document.getElementById("updatesList");
-    ul.innerHTML="";
-    data.slice().reverse().forEach(u=>{
-      const li=document.createElement("li");
-      li.innerHTML=`<strong>${u.title}</strong><br>${u.message}`;
-      ul.appendChild(li);
-    });
-    document.getElementById("serverUpdates").style.display="block";
-  }catch(e){ console.log("Cannot fetch updates:", e); }
+    const arr = Array.isArray(data) ? data : (data.items || []);
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(arr));
+      localStorage.setItem(CACHE_TS_KEY, Date.now().toString());
+    } catch (e) {
+      console.warn("Unable to cache updates:", e);
+    }
+    renderUpdatesFromArray(arr, {source: 'network'});
+    document.getElementById("serverUpdates").style.display = "block";
+  }catch(e){
+    console.warn("Cannot fetch updates:", e);
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      const ts = localStorage.getItem(CACHE_TS_KEY);
+      if(cached){
+        const arr = JSON.parse(cached);
+        const cachedAt = ts ? new Date(parseInt(ts,10)).toLocaleString() : 'unknown time';
+        renderUpdatesFromArray(arr, {source: 'cache', cachedAt});
+        document.getElementById("serverUpdates").style.display = "block";
+        const notice = document.createElement('li');
+        notice.className = 'no-updates';
+        notice.textContent = `Unable to fetch latest updates. Showing cached updates from ${cachedAt}.`;
+        const list = document.getElementById('updatesList');
+        list.insertBefore(notice, list.firstChild);
+      } else {
+        ul.innerHTML = '<li class="no-updates">Unable to fetch updates and no cached updates are available.</li>';
+        document.getElementById("serverUpdates").style.display = "block";
+      }
+    } catch (ex) {
+      console.error("Error using cached updates:", ex);
+      ul.innerHTML = '<li class="no-updates">Unable to fetch updates.</li>';
+      document.getElementById("serverUpdates").style.display = "block";
+    }
+  }
 }
-setInterval(fetchStatus,5000);
-setInterval(fetchUpdates,10000);
+
+// Attach retry/hide controls
+function initUpdatesControls(){
+  document.getElementById('retryUpdates').onclick = () => {
+    const btn = document.getElementById('retryUpdates');
+    btn.textContent = 'Retrying…';
+    btn.disabled = true;
+    fetchUpdates(true).finally(()=>{ btn.textContent = 'Retry'; btn.disabled = false; });
+  };
+
+  const toggleBtn = document.getElementById('toggleUpdates');
+  toggleBtn.onclick = () => {
+    const box = document.getElementById('serverUpdates');
+    if(box.style.display === 'none' || getComputedStyle(box).display === 'none'){
+      box.style.display = 'block';
+      toggleBtn.textContent = 'Hide';
+    } else {
+      box.style.display = 'none';
+      toggleBtn.textContent = 'Show';
+    }
+  };
+}
+
+// periodic tasks
+setInterval(fetchStatus, 5000);
+setInterval(fetchUpdates, 10000);
+
+// initialize
 fetchStatus();
 fetchUpdates();
+initUpdatesControls();
 
 // --------------------------------------------------------------------------
 // Key Vault
