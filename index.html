@@ -101,199 +101,67 @@ background: linear-gradient(90deg, #000000 0%, #1a1a1a 50%, #000000 100%);
 -webkit-background-clip: text;
 -webkit-text-fill-color: transparent;
 text-shadow: 0 0 5px #000000,0 0 10px #000000,0 0 15px #111;}
-.tier.Owner:hover{text-shadow:0 0 10px #0ff,0 0 20px #0ff,0 0 30px #0ff,0 0 50px #0ff;transform:scale(1.05);
-transition:all .3s ease;}
-.features{width:90%;text-align:left;max-width:500px;
- background:var(--gray);border-radius:6px;padding:1rem;
- box-shadow:0 2x8px rgba(0,0,0,.05);}
-.features h4{margin-bottom:.5rem;}
-.features ul{margin:0;}
-#vault{background:#f9f9f9;border-radius:6px;padding:1rem;
- box-shadow:0 2px 6px rgba(0,0,0,.1);display:none;max-width:440px;}
-#vault h3{margin-bottom:.8rem;font-size:1.2rem;color:var(--primary);}
-#vault ul{max-height:200px;overflow-y:auto;margin-top:1rem;
- list-style:none;padding:0;}
-.keyItem{display:flex;justify-content:space-between;align-items:center;
- padding:.4rem .6rem;border-radius:4px;margin:4px 0;
- background:var(--white);box-shadow:0 1px 3px rgba(0,0,0,.1);}
-.keyName{font-weight:600;}
-.keyDetails{font-size:.9rem;color:#555;margin-left:1rem;}
-.keyItem button{background:#e53935;color:#fff;font-size:.7rem;padding:.2rem .4rem;
- border:none;border-radius:4px;cursor:pointer;}
-.keyItem button:hover{background:#d32f2f;}
+/* BANNED test style */
+.tier.banned{background:#6c757d; color:#fff; font-weight:700;}
 
 /* ---------------------------------------------------- */
-/* 6. Server status & updates */
+/* Server status & updates */
 #serverStatus, #serverUpdates{background:var(--gray);border-radius:6px;padding:1rem;
  margin-top:1rem;width:90%;max-width:440px;}
 #serverUpdates ul{list-style:none;padding:0; margin:0; display:block;}
-
-/* keep the updates box bounded and scrollable so it doesn't push login off-screen */
 #serverUpdates{max-height:260px; overflow:auto;}
 #serverUpdates li{margin-bottom:.5rem;padding:.5rem;background:var(--white);
  border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.1);}
 
-/* title remains bold */
 .update-title{font-weight:700;display:block;margin-bottom:6px; color:var(--dark);}
-
-/* CHANGED:
-   Allow the message to expand (no forced truncation) and preserve whitespace/newlines.
-   The updates container itself remains scrollable (so long messages don't push the whole page).
-*/
 .update-message{
   display:block;
   color:var(--update-text);
-  white-space:pre-wrap;   /* preserve newlines and wrap long lines */
-  word-break:break-word;  /* avoid overflow from long tokens/URLs */
-  max-height:none;        /* remove the per-item cutoff */
+  white-space:pre-wrap;
+  word-break:break-word;
+  max-height:none;
   overflow:visible;
 }
-
-/* placeholder style when there are no updates */
 #updatesList .no-updates{font-style:italic;color:var(--muted);padding:.4rem;}
-/* small control row in header */
 #serverUpdates .controls{margin-top:6px;display:flex;gap:6px;align-items:center;}
 #updatesHint{color:var(--muted);}
+
+/* ---------------------------------------------------- */
+/* NEW: Full-screen banned overlay */
+.banned-overlay{
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(30,30,30,0.95));
+  z-index:9999999;
+  color: #ffdddd;
+  text-align:center;
+  padding:2rem;
+}
+.banned-overlay h1{
+  font-size: clamp(28px, 10vw, 120px);
+  line-height:1;
+  margin:0;
+  letter-spacing: 1px;
+  color: #ff6b6b;
+  text-shadow: 0 6px 30px rgba(0,0,0,0.6);
+}
+.banned-overlay p{
+  margin-top:1rem;
+  color:#ffdede;
+  font-size: clamp(14px, 2.5vw, 20px);
+}
 </style>
 </head>
-
-<!-- WebSocket Message Broadcast - Embed Code -->
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-<script>
-(function() {
-    // Connect to the WebSocket server
-    const socket = io('http://broadcastadmin.fischyweb.com');
-    
-    let messageBubble = null;
-    
-    // Create the floating message bubble
-    function createBubble(message, shutdownNotice) {
-        // Remove existing bubble if any
-        if (messageBubble) {
-            messageBubble.remove();
-        }
-        
-        // Don't create bubble if no message
-        if (!message && !shutdownNotice) return;
-        
-        // Create bubble element
-        messageBubble = document.createElement('div');
-        messageBubble.id = 'ws-message-bubble';
-        
-        // Style the bubble
-        messageBubble.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            max-width: 400px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            z-index: 999999;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            animation: slideIn 0.5s ease-out;
-        `;
-        
-        // Build content
-        let content = '';
-        if (message) {
-            content += `<div style="font-size: 14px; line-height: 1.6; margin-bottom: ${shutdownNotice ? '12px' : '0'};">${escapeHtml(message)}</div>`;
-        }
-        if (shutdownNotice) {
-            content += `<div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 6px; font-size: 13px; border-left: 3px solid #ffc107;">⚠️ ${escapeHtml(shutdownNotice)}</div>`;
-        }
-        
-        // Add close button
-        content += `<button onclick="this.parentElement.remove()" style="
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255,255,255,0.3);
-            border: none;
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            line-height: 1;
-            transition: background 0.3s;
-        " onmouseover="this.style.background='rgba(255,255,255,0.5)'" onmouseout="this.style.background='rgba(255,255,255,0.3)'">×</button>`;
-        
-        messageBubble.innerHTML = content;
-        
-        // Add animation keyframes
-        if (!document.getElementById('ws-bubble-styles')) {
-            const style = document.createElement('style');
-            style.id = 'ws-bubble-styles';
-            style.textContent = `
-                @keyframes slideIn {
-                    from {
-                        transform: translateX(450px);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        // Add to page
-        document.body.appendChild(messageBubble);
-    }
-    
-    // Escape HTML to prevent XSS
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    
-    // Listen for broadcast messages
-    socket.on('broadcast_message', function(data) {
-        console.log('📢 Received broadcast message:', data);
-        createBubble(data.message, data.shutdown_notice);
-    });
-    
-    // Listen for clear message event
-    socket.on('clear_messages', function() {
-        console.log('🗑️ Messages cleared');
-        if (messageBubble) {
-            messageBubble.remove();
-            messageBubble = null;
-        }
-    });
-    
-    // Request last message when connected
-    socket.on('connect', function() {
-        console.log('✅ Connected to WebSocket server');
-        socket.emit('request_last_message');
-    });
-    
-    // Receive last message (for persistence)
-    socket.on('last_message', function(data) {
-        if (data.message || data.shutdown_notice) {
-            createBubble(data.message, data.shutdown_notice);
-        }
-    });
-    
-    socket.on('disconnect', function() {
-        console.log('❌ Disconnected from WebSocket server');
-    });
-})();
-</script>
-  
 <body>
+<!-- normal UI -->
 <!-- Login -->
 <div class="card" id="auth">
   <h2>Authenticate</h2>
   <button id="themeToggle" class="smallBtn" title="Toggle theme">🌙</button>
-  <h3>If you want to buy a key, email 5137455873@student.cms.k12.nc.us, and he will give you a invoice</h3>
+  <h3>If you want to buy a key, email 5137455873@student.cms.k12.nc.us, and he will give you an invoice</h3>
   <input type="text" id="keyInput" class="input" placeholder="Enter your key">
   <button id="authBtn" class="btn">Authenticate</button>
   <div id="msg" role="alert"></div>
@@ -335,10 +203,7 @@ let currentKey = null; // authenticated key
 const CACHE_KEY = 'cachedServerUpdates';
 const CACHE_TS_KEY = 'cachedServerUpdatesTs';
 
-// configurable limits
-const MAX_UPDATES = 20;            // keep only the latest N updates
-const MAX_MESSAGE_LENGTH = 400;    // used when truncation is desired; not forced now
-
+const MAX_UPDATES = 20;
 const RANKS = [
   {id:"overlord", name:"Overlord", features:["Unlimited access","Priority support","2FA by default","Custom branding"]},
   {id:"standard", name:"Standard", features:["Core modules","48‑h support","Basic analytics"]},
@@ -349,107 +214,46 @@ const RANKS = [
   {id:"Owner", name:"Owner", features:["Basic modules","Community forums"]},
 ];
 
-// --------------------------------------------------------------------------
-// SHA-256 helper
-async function sha256Hex(str){
-  const buf = new TextEncoder().encode(str);
-  const hash = await crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(hash))
-    .map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-// --------------------------------------------------------------------------
-// Helpers: strip HTML, truncate (optional), linkify safely (create elements, no innerHTML)
+// helpers
 function stripHtml(input){
   if(!input) return '';
-  try{
-    const doc = new DOMParser().parseFromString(input, 'text/html');
-    return doc.body ? doc.body.textContent || '' : String(input);
-  }catch(e){
-    return String(input);
-  }
+  try{ const doc = new DOMParser().parseFromString(input,'text/html'); return doc.body ? doc.body.textContent || '' : String(input); }
+  catch(e){ return String(input); }
 }
-
-function truncateText(text, maxLen){
-  if(!text) return '';
-  if(text.length <= maxLen) return text;
-  return text.slice(0, maxLen-1) + '…';
-}
-
 function linkifyToFragment(text){
   const fragment = document.createDocumentFragment();
   if(!text) return fragment;
   const urlRegex = /((https?:\/\/|ftp:\/\/)[\w-+&@#/%?=~_|!:,.;()$[\]*'%-]+)/gi;
-  let lastIndex = 0;
-  let m;
-  while((m = urlRegex.exec(text)) !== null){
-    const url = m[0];
-    const idx = m.index;
-    if(idx > lastIndex){
-      fragment.appendChild(document.createTextNode(text.slice(lastIndex, idx)));
-    }
-    const a = document.createElement('a');
-    a.href = url;
-    a.textContent = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.style.color = '#1976d2';
-    a.style.textDecoration = 'underline';
+  let lastIndex=0,m;
+  while((m=urlRegex.exec(text))!==null){
+    const url = m[0], idx = m.index;
+    if(idx>lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex,idx)));
+    const a = document.createElement('a'); a.href=url; a.textContent=url; a.target='_blank'; a.rel='noopener noreferrer';
+    a.style.color='#1976d2'; a.style.textDecoration='underline';
     fragment.appendChild(a);
     lastIndex = idx + url.length;
   }
-  if(lastIndex < text.length){
-    fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-  }
+  if(lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
   return fragment;
 }
 
-// --------------------------------------------------------------------------
-// Render updates array into the DOM (safely)
 function renderUpdatesFromArray(arr, meta){
   const ul = document.getElementById("updatesList");
   ul.innerHTML = '';
-
-  if(!Array.isArray(arr) || arr.length === 0){
-    ul.innerHTML = '<li class="no-updates">No updates available.</li>';
-    return;
-  }
-
-  // take last MAX_UPDATES and render newest-first
+  if(!Array.isArray(arr) || arr.length===0){ ul.innerHTML = '<li class="no-updates">No updates available.</li>'; return; }
   const recent = arr.slice(-MAX_UPDATES).reverse();
-
   recent.forEach(u=>{
     const li = document.createElement('li');
-    const title = document.createElement('span');
-    title.className = 'update-title';
-    title.textContent = (u.title || 'Update');
-
-    const msgContainer = document.createElement('div');
-    msgContainer.className = 'update-message';
-
-    // strip HTML from incoming message, keep newlines, linkify
-    const plain = stripHtml(u.message || '');
-    // don't force truncation; show full text (container scrolls)
-    const frag = linkifyToFragment(plain);
-    msgContainer.appendChild(frag);
-
-    li.appendChild(title);
-    li.appendChild(msgContainer);
-    ul.appendChild(li);
+    const title = document.createElement('span'); title.className='update-title'; title.textContent = (u.title||'Update');
+    const msg = document.createElement('div'); msg.className='update-message';
+    const plain = stripHtml(u.message||'');
+    msg.appendChild(linkifyToFragment(plain));
+    li.appendChild(title); li.appendChild(msg); ul.appendChild(li);
   });
-
   const hint = document.getElementById('updatesHint');
-  if(meta && meta.source){
-    hint.textContent = meta.source === 'cache' 
-      ? `(showing cached updates from ${meta.cachedAt})` 
-      : `(latest shown)`;
-  } else {
-    hint.textContent = '(latest shown)';
-  }
+  hint.textContent = meta && meta.source === 'cache' ? `(showing cached updates from ${meta.cachedAt})` : '(latest shown)';
 }
 
-// --------------------------------------------------------------------------
-// Fetch server status & updates
 async function fetchStatus(){
   try{
     const res = await fetch(SERVER_URL + "/api/status");
@@ -460,176 +264,103 @@ async function fetchStatus(){
     document.getElementById("srvMem").textContent = data.memory_percent;
     document.getElementById("srvUsers").textContent = data.user_count;
     document.getElementById("serverStatus").style.display = "block";
-  }catch(e){
-    console.log("Cannot reach server status:", e);
-  }
+  }catch(e){ console.log("Cannot reach server status:", e); }
 }
 
-/*
-  fetchUpdates:
-  - fetches updates, caches them, falls back to cached data if fetch fails
-  - messages are no longer truncated in the item itself; the updates box scrolls
-*/
-async function fetchUpdates(forceNetwork = false){
+async function fetchUpdates(forceNetwork=false){
   const ul = document.getElementById("updatesList");
   ul.innerHTML = '<li class="no-updates">Loading updates…</li>';
-
   try{
-    const res = await fetch(SERVER_URL + "/api/updates", {mode: 'cors'});
+    const res = await fetch(SERVER_URL + "/api/updates", {mode:'cors'});
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     const arr = Array.isArray(data) ? data : (data.items || []);
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(arr));
-      localStorage.setItem(CACHE_TS_KEY, Date.now().toString());
-    } catch (e) {
-      console.warn("Unable to cache updates:", e);
-    }
-    renderUpdatesFromArray(arr, {source: 'network'});
+    try{ localStorage.setItem(CACHE_KEY, JSON.stringify(arr)); localStorage.setItem(CACHE_TS_KEY, Date.now().toString()); } catch(e){}
+    renderUpdatesFromArray(arr,{source:'network'});
     document.getElementById("serverUpdates").style.display = "block";
   }catch(e){
     console.warn("Cannot fetch updates:", e);
-    try {
+    try{
       const cached = localStorage.getItem(CACHE_KEY);
       const ts = localStorage.getItem(CACHE_TS_KEY);
       if(cached){
         const arr = JSON.parse(cached);
         const cachedAt = ts ? new Date(parseInt(ts,10)).toLocaleString() : 'unknown time';
-        renderUpdatesFromArray(arr, {source: 'cache', cachedAt});
-        document.getElementById("serverUpdates").style.display = "block";
-        const notice = document.createElement('li');
-        notice.className = 'no-updates';
+        renderUpdatesFromArray(arr,{source:'cache', cachedAt});
+        const notice = document.createElement('li'); notice.className='no-updates';
         notice.textContent = `Unable to fetch latest updates. Showing cached updates from ${cachedAt}.`;
-        const list = document.getElementById('updatesList');
-        list.insertBefore(notice, list.firstChild);
+        const list = document.getElementById('updatesList'); list.insertBefore(notice, list.firstChild);
+        document.getElementById("serverUpdates").style.display = "block";
       } else {
         ul.innerHTML = '<li class="no-updates">Unable to fetch updates and no cached updates are available.</li>';
         document.getElementById("serverUpdates").style.display = "block";
       }
-    } catch (ex) {
-      console.error("Error using cached updates:", ex);
-      ul.innerHTML = '<li class="no-updates">Unable to fetch updates.</li>';
-      document.getElementById("serverUpdates").style.display = "block";
-    }
+    }catch(ex){ ul.innerHTML = '<li class="no-updates">Unable to fetch updates.</li>'; document.getElementById("serverUpdates").style.display = "block"; }
   }
 }
 
-// Attach retry/hide controls
 function initUpdatesControls(){
-  document.getElementById('retryUpdates').onclick = () => {
-    const btn = document.getElementById('retryUpdates');
-    btn.textContent = 'Retrying…';
-    btn.disabled = true;
-    fetchUpdates(true).finally(()=>{ btn.textContent = 'Retry'; btn.disabled = false; });
+  document.getElementById('retryUpdates').onclick = ()=>{
+    const btn = document.getElementById('retryUpdates'); btn.textContent='Retrying…'; btn.disabled=true;
+    fetchUpdates(true).finally(()=>{ btn.textContent='Retry'; btn.disabled=false; });
   };
-
   const toggleBtn = document.getElementById('toggleUpdates');
-  toggleBtn.onclick = () => {
+  toggleBtn.onclick = ()=>{
     const box = document.getElementById('serverUpdates');
-    if(box.style.display === 'none' || getComputedStyle(box).display === 'none'){
-      box.style.display = 'block';
-      toggleBtn.textContent = 'Hide';
-    } else {
-      box.style.display = 'none';
-      toggleBtn.textContent = 'Show';
-    }
+    if(box.style.display === 'none' || getComputedStyle(box).display === 'none'){ box.style.display='block'; toggleBtn.textContent='Hide'; }
+    else { box.style.display='none'; toggleBtn.textContent='Show'; }
   };
 }
 
-// periodic tasks
-setInterval(fetchStatus, 5000);
-setInterval(fetchUpdates, 10000);
-
-// initialize
-fetchStatus();
-fetchUpdates();
-initUpdatesControls();
-
-// --------------------------------------------------------------------------
-// Key Vault
+// Key vault helpers (unchanged)
 function loadVault(){ return localStorage.getItem('keyVault')? JSON.parse(localStorage.getItem('keyVault')): [];}
 function saveVault(v){ localStorage.setItem('keyVault',JSON.stringify(v));}
 function renderVault(){
   const vault = loadVault();
-  const ul = document.getElementById('keyList');
-  if(!ul) return;
-  ul.innerHTML='';
-  vault.forEach((k, idx)=>{
-    const li=document.createElement('li');li.className='keyItem';
+  const ul = document.getElementById('keyList'); if(!ul) return; ul.innerHTML='';
+  vault.forEach((k, idx)=>{ const li=document.createElement('li'); li.className='keyItem';
     li.innerHTML=`<strong class="keyName">${k.name||'Unnamed'}</strong>
                   <span class="keyDetails">${k.tier} – added ${new Date(k.addedAt).toLocaleString()}</span>
                   <button class="delBtn" data-i="${idx}" title="Remove">&times;</button>`;
     ul.appendChild(li);
   });
 }
-function promptAddKey(){
-  const raw = prompt('Enter the key you want to store (leave blank to cancel)');
-  if (!raw) return;
-  const name = prompt('Optional: give this key a name')||'';
-  if (!/^[a-f0-9]{64}$/.test(raw)){
-    alert('Invalid key – must be 64 hex characters.');
+function promptAddKey(){ const raw = prompt('Enter the key you want to store (leave blank to cancel)'); if(!raw) return; const name = prompt('Optional: give this key a name')||''; if(!/^[a-f0-9]{64}$/.test(raw)){ alert('Invalid key – must be 64 hex characters.'); return;} const tier = raw.split('_')[0]||'Standard'; const vault = loadVault(); vault.push({hash:raw,name,tier,addedAt:Date.now()}); saveVault(vault); renderVault();}
+function deleteKey(i){ if(!confirm('Delete this key?')) return; const vault = loadVault(); vault.splice(i,1); saveVault(vault); renderVault();}
+
+// Login / display logic
+async function sha256Hex(str){ const buf = new TextEncoder().encode(str); const hash = await crypto.subtle.digest('SHA-256', buf); return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+
+async function showWelcome(userData, loggedAsFriend){
+  // If the user's rank is "standard" we show a full-screen banned message only.
+  if(userData && userData.rank === 'standard'){
+    // Remove everything and show overlay with big banned message.
+    // Using clear body and append overlay so nothing else is interactive.
+    document.body.innerHTML = '';
+    const overlay = document.createElement('div');
+    overlay.className = 'banned-overlay';
+    overlay.innerHTML = `<div><h1>BANED BY OWNER</h1><p>If you think this is a mistake contact the server owner.</p></div>`;
+    document.body.appendChild(overlay);
     return;
   }
-  const tier = raw.split('_')[0]||'Standard';
-  const vault = loadVault();
-  vault.push({hash:raw,name,tier,addedAt:Date.now()});
-  saveVault(vault);
-  renderVault();
-}
-function deleteKey(i){
-  if (!confirm('Delete this key?')) return;
-  const vault = loadVault();
-  vault.splice(i,1);
-  saveVault(vault);
-  renderVault();
-}
 
-// --------------------------------------------------------------------------
-// Open URL in about:blank
-function openCustomPage(url, watermarkEnabled, watermarkRank){
-  if(!url){alert('Enter a URL.');return;}
-  const win=window.open('about:blank','_blank');
-  if(!win){alert('Pop-ups blocked.');return;}
-  const watermarkHTML = watermarkEnabled?`
-    <div id="wmContainer">
-      <div id="wm">FISCHY HIDER</div>
-      <span class="wmRank">${watermarkRank}</span>
-    </div>`:'';
-  win.document.write(`
-    <!doctype html>
-    <html lang="en"><head><meta charset="utf-8"><title>cms.instructure.com</title>
-    <style>
-      html,body{margin:0;padding:0;font-family:Inter,sans-serif;background:#fff;}
-      iframe{border:none;width:100%;height:100vh;}
-      #wmContainer{position:fixed;top:50%;right:10px;transform:translateY(-50%);
-        display:flex;align-items:center;z-index:9999;}
-      #wm{font-size:48px;color:rgba(200,200,200,.6);transform:rotate(90deg);font-weight:bold;}
-      .wmRank{font-size:20px;color:#222;margin-left:15px;transform:rotate(-90deg);}
-    </style></head>
-    <body>${watermarkHTML}<iframe src="${url}"></iframe></body></html>
-  `);
-  win.document.close();
-}
-
-// --------------------------------------------------------------------------
-// Show welcome page
-async function showWelcome(userData, loggedAsFriend){
+  // Normal welcome rendering (unchanged)
   const friendKey = await sha256Hex(userData.name+"_Friend_Key");
   const title = loggedAsFriend?`${userData.name} – Friend`:userData.name;
-  const rank = RANKS.find(r=>r.id===userData.rank)||{name:"Unknown",features:[]};
+  const rankInfo = RANKS.find(r=>r.id===userData.rank) || {name:"Unknown",features:[]};
   const keyBlock = loggedAsFriend?'':`
     <h3>Your key (Friend key to use):</h3>
     <pre id="friendKey">${friendKey}</pre>
     <button class="smallBtn" id="copyFriendBtn">Copy Key</button>`;
-  const featList = rank.features.map(f=>`<li>${f}</li>`).join('');
-  const featureBlock = `<div class="features"><h4>Tier Features (${rank.name})</h4><ul>${featList}</ul></div>`;
+  const featList = rankInfo.features.map(f=>`<li>${f}</li>`).join('');
+  const featureBlock = `<div class="features"><h4>Tier Features (${rankInfo.name})</h4><ul>${featList}</ul></div>`;
   const goodRanks=['overlord','Owner'];
   let wmEnabled=false;
 
   document.body.innerHTML=`
     <div id="wrapper">
       <h1>Welcome, ${title}!</h1>
-      <h2>Tier: <span class="tier ${userData.rank}">${rank.name}</span></h2>
+      <h2>Tier: <span class="tier ${userData.rank}">${rankInfo.name}</span></h2>
       ${keyBlock}
       <input type="text" id="urlInput" class="urlInput" placeholder="Enter a URL to view in about:blank">
       <button class="smallBtn" id="openUrlBtn">press me to Hide it</button>
@@ -655,12 +386,13 @@ async function showWelcome(userData, loggedAsFriend){
   }
 
   if(!loggedAsFriend){
-    document.getElementById('copyFriendBtn').onclick=()=>navigator.clipboard.writeText(friendKey).then(()=>alert('Key copied!'));
+    const copyBtn = document.getElementById('copyFriendBtn');
+    if(copyBtn) copyBtn.onclick=()=>navigator.clipboard.writeText(friendKey).then(()=>alert('Key copied!'));
   }
 
   document.getElementById('openUrlBtn').onclick=()=>{ 
     const url=document.getElementById('urlInput').value.trim();
-    openCustomPage(url, !goodRanks.includes(userData.rank)||wmEnabled, rank.name);
+    openCustomPage(url, !goodRanks.includes(userData.rank)||wmEnabled, rankInfo.name);
   };
 
   renderVault();
@@ -671,63 +403,79 @@ async function showWelcome(userData, loggedAsFriend){
   document.getElementById('againBtn').onclick=()=>location.reload();
 }
 
-// --------------------------------------------------------------------------
-// Fetch key list
+// Fetch key list and login handling
 async function fetchKeyList(){
   const sp = document.getElementById('spinner');
   const msg= document.getElementById('msg');
-  sp.style.display='block';
+  if(sp) sp.style.display='block';
   try{
     const res = await fetch(SERVER_URL+"/api/keys",{mode:'cors'});
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     keyList = await res.json();
-    console.log('Key list fetched:', keyList);
   }catch(e){
     console.error('Unable to fetch key list:', e);
-    msg.className='error'; msg.textContent='Unable to reach key list. Try again.';
-  }finally{ sp.style.display='none'; }
+    if(msg){ msg.className='error'; msg.textContent='Unable to reach key list. Try again.'; }
+  }finally{ if(sp) sp.style.display='none'; }
 }
 
-// --------------------------------------------------------------------------
-// Live key revocation
-async function liveKeyCheck(){
-  if(!currentKey) return;
-  try{
-    const res = await fetch(SERVER_URL+"/api/keys");
-    const latestKeys = await res.json();
-    const found = latestKeys.find(k=>k.main===currentKey||k.friend===currentKey);
-    if(!found){
-      alert("Your key has been removed! Logging out.");
-      localStorage.removeItem('keyVault');
-      location.reload();
-    }
-  }catch(e){ console.log("Key check failed:", e); }
-}
-setInterval(liveKeyCheck,3000);
-
-// --------------------------------------------------------------------------
-// Login logic
 async function doLogin(){
-  const key = document.getElementById('keyInput').value.trim();
+  const keyEl = document.getElementById('keyInput');
   const msg = document.getElementById('msg');
-  if(!key){ msg.className='error'; msg.textContent='Enter a key.'; return; }
-  msg.textContent=''; msg.className='';
+  const key = keyEl ? keyEl.value.trim() : '';
+  if(!key){ if(msg){ msg.className='error'; msg.textContent='Enter a key.'; } return; }
+  if(msg){ msg.textContent=''; msg.className=''; }
   await fetchKeyList();
-  if(!Array.isArray(keyList)||keyList.length===0){ msg.className='error'; msg.textContent='Key list empty.'; return; }
+  if(!Array.isArray(keyList) || keyList.length===0){ if(msg){ msg.className='error'; msg.textContent='Key list empty.'; } return; }
   const matched = keyList.find(k=>k.main===key||k.friend===key);
-  if(!matched){ msg.className='error'; msg.textContent='Unknown key.'; return; }
+  if(!matched){ if(msg){ msg.className='error'; msg.textContent='Unknown key.'; } return; }
   currentKey = key;
   showWelcome(matched,false);
 }
 
+document.addEventListener('click', function(e){
+  // no-op to keep page responsive before login
+}, true);
+
 document.getElementById('authBtn').onclick=doLogin;
 document.getElementById('keyInput').addEventListener('keydown',e=>{ if(e.key==='Enter'){doLogin(); e.preventDefault();} });
 
-// --------------------------------------------------------------------------
+// updates & init
+setInterval(fetchStatus,5000);
+setInterval(fetchUpdates,10000);
+fetchStatus();
+fetchUpdates();
+initUpdatesControls();
+
+// openCustomPage (unchanged)
+function openCustomPage(url, watermarkEnabled, watermarkRank){
+  if(!url){alert('Enter a URL.');return;}
+  const win=window.open('about:blank','_blank');
+  if(!win){alert('Pop-ups blocked.');return;}
+  const watermarkHTML = watermarkEnabled?`
+    <div id="wmContainer">
+      <div id="wm">FISCHY HIDER</div>
+      <span class="wmRank">${watermarkRank}</span>
+    </div>`:'';
+  win.document.write(`
+    <!doctype html>
+    <html lang="en"><head><meta charset="utf-8"><title>cms.instructure.com</title>
+    <style>
+      html,body{margin:0;padding:0;font-family:Inter,sans-serif;background:#fff;}
+      iframe{border:none;width:100%;height:100vh;}
+      #wmContainer{position:fixed;top:50%;right:10px;transform:translateY(-50%);
+        display:flex;align-items:center;z-index:9999;}
+      #wm{font-size:48px;color:rgba(200,200,200,.6);transform:rotate(90deg);font-weight:bold;}
+      .wmRank{font-size:20px;color:#222;margin-left:15px;transform:rotate(-90deg);}
+    </style></head>
+    <body>${watermarkHTML}<iframe src="${url}"></iframe></body></html>
+  `);
+  win.document.close();
+}
+
 // Theme switcher
-function updateThemeIcon(){ document.getElementById('themeToggle').textContent = document.body.classList.contains('dark')?'☀️':'🌙'; }
+function updateThemeIcon(){ const t = document.getElementById('themeToggle'); if(!t) return; t.textContent = document.body.classList.contains('dark')?'☀️':'🌙'; }
 function toggleTheme(){ document.body.classList.toggle('dark'); localStorage.setItem('darkMode',document.body.classList.contains('dark')); updateThemeIcon(); }
-window.addEventListener('load',()=>{ if(localStorage.getItem('darkMode')==='true') toggleTheme(); else updateThemeIcon(); });
+window.addEventListener('load',()=>{ if(localStorage.getItem('darkMode')==='true') document.body.classList.add('dark'); updateThemeIcon(); });
 document.getElementById('themeToggle').onclick=toggleTheme;
 </script>
 </body>
