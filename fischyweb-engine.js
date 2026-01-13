@@ -1,21 +1,65 @@
 /**
- * Fischyweb SDK Engine v1.0.0
- * Professional website enhancement engine with protection
+ * Fischyweb SDK Engine v2.0.0
+ * Professional website enhancement engine
  * 
  * Features:
- * - Powered by Fischyweb animated startup
- * - Anti-copy protection (blocks proxy, HTML downloaders, text selection on protected elements)
- * - Smooth scrolling engine with easing
- * - Performance optimizations
- * - CSS/DOM injection from .fischyweb packages
+ * - Animated startup splash screen
+ * - Content protection (right-click, copy, selection blocking)
+ * - Scroll animations (fade-in, slide-up, zoom elements on scroll)
+ * - Parallax effects
+ * - Image lazy loading with blur-up effect
+ * - Tooltip system
+ * - Modal/lightbox system
+ * - Custom cursor effects
+ * - Text effects (typewriter, gradient text)
+ * - Dark mode toggle
+ * - Sticky elements
+ * - Back to top button
+ * - Reading progress bar
+ * - .fischyweb package loader
  * 
  * Usage: <script src="fischyweb-engine.js"></script>
  */
 (function() {
   'use strict';
 
-  var VERSION = '1.0.0';
+  var VERSION = '2.0.0';
   var STARTUP_SHOWN = false;
+  var config = {
+    showStartup: true,
+    enableProtection: false,
+    enableScrollAnimations: true,
+    enableParallax: true,
+    enableLazyLoad: true,
+    enableTooltips: true,
+    enableBackToTop: true,
+    enableProgressBar: true,
+    enableDarkMode: false,
+    protectionLevel: 'medium'
+  };
+
+  // ============================================
+  // UTILITY FUNCTIONS
+  // ============================================
+  function debounce(fn, wait) {
+    var timeout;
+    return function() {
+      var ctx = this, args = arguments;
+      clearTimeout(timeout);
+      timeout = setTimeout(function() { fn.apply(ctx, args); }, wait);
+    };
+  }
+
+  function throttle(fn, limit) {
+    var waiting = false;
+    return function() {
+      if (!waiting) {
+        fn.apply(this, arguments);
+        waiting = true;
+        setTimeout(function() { waiting = false; }, limit);
+      }
+    };
+  }
 
   // ============================================
   // STARTUP ANIMATION
@@ -27,191 +71,17 @@
     return new Promise(function(resolve) {
       var overlay = document.createElement('div');
       overlay.id = 'fischyweb-startup';
-      overlay.innerHTML = `
-        <style>
-          #fischyweb-startup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            z-index: 2147483647;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow: hidden;
-          }
-          
-          .fischyweb-logo-container {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            margin-bottom: 30px;
-          }
-          
-          .fischyweb-logo-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 3px solid transparent;
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: fischyweb-spin 1s linear infinite;
-          }
-          
-          .fischyweb-logo-ring:nth-child(2) {
-            width: 90%;
-            height: 90%;
-            top: 5%;
-            left: 5%;
-            border-top-color: #764ba2;
-            animation-duration: 1.5s;
-            animation-direction: reverse;
-          }
-          
-          .fischyweb-logo-ring:nth-child(3) {
-            width: 80%;
-            height: 80%;
-            top: 10%;
-            left: 10%;
-            border-top-color: #f64f59;
-            animation-duration: 2s;
-          }
-          
-          .fischyweb-logo-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 40px;
-            animation: fischyweb-pulse 1.5s ease-in-out infinite;
-          }
-          
-          @keyframes fischyweb-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          
-          @keyframes fischyweb-pulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
-          }
-          
-          .fischyweb-title {
-            color: white;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            opacity: 0;
-            animation: fischyweb-fadeIn 0.5s ease-out 0.3s forwards;
-          }
-          
-          .fischyweb-subtitle {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            opacity: 0;
-            animation: fischyweb-fadeIn 0.5s ease-out 0.5s forwards;
-          }
-          
-          .fischyweb-version {
-            position: absolute;
-            bottom: 30px;
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 12px;
-            letter-spacing: 1px;
-          }
-          
-          .fischyweb-particles {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            pointer-events: none;
-          }
-          
-          .fischyweb-particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            animation: fischyweb-float 3s ease-in-out infinite;
-          }
-          
-          @keyframes fischyweb-float {
-            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
-          }
-          
-          @keyframes fischyweb-fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          
-          @keyframes fischyweb-fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; visibility: hidden; }
-          }
-          
-          .fischyweb-loading-bar {
-            width: 200px;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            margin-top: 30px;
-            overflow: hidden;
-            opacity: 0;
-            animation: fischyweb-fadeIn 0.5s ease-out 0.7s forwards;
-          }
-          
-          .fischyweb-loading-progress {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2, #f64f59);
-            border-radius: 3px;
-            animation: fischyweb-loading 1.5s ease-out forwards;
-          }
-          
-          @keyframes fischyweb-loading {
-            from { width: 0%; }
-            to { width: 100%; }
-          }
-        </style>
-        
-        <div class="fischyweb-particles">
-          <div class="fischyweb-particle" style="left: 62.19899801550692%; animation-delay: 1.22468764197669s; animation-duration: 3.0003331822284824s;"></div><div class="fischyweb-particle" style="left: 66.9445546307342%; animation-delay: 0.6942286719693093s; animation-duration: 3.0111923377986702s;"></div><div class="fischyweb-particle" style="left: 89.65583293901155%; animation-delay: 0.6645470955959298s; animation-duration: 2.565711637350599s;"></div><div class="fischyweb-particle" style="left: 47.915602217425125%; animation-delay: 1.8838929785557368s; animation-duration: 2.931967658112277s;"></div><div class="fischyweb-particle" style="left: 51.18384755028348%; animation-delay: 0.30940065277468753s; animation-duration: 3.709600273248032s;"></div><div class="fischyweb-particle" style="left: 61.99052771565301%; animation-delay: 0.09112653643002466s; animation-duration: 2.698763072512307s;"></div><div class="fischyweb-particle" style="left: 92.87976862144744%; animation-delay: 2.751073969244861s; animation-duration: 3.695402828996434s;"></div><div class="fischyweb-particle" style="left: 16.185535243055593%; animation-delay: 2.0041463459978885s; animation-duration: 3.7251923966441485s;"></div><div class="fischyweb-particle" style="left: 83.52183858055508%; animation-delay: 0.7444364594141843s; animation-duration: 3.7721831877724146s;"></div><div class="fischyweb-particle" style="left: 79.75781045368734%; animation-delay: 0.5081477244037299s; animation-duration: 2.4260744619944634s;"></div><div class="fischyweb-particle" style="left: 34.14728989591384%; animation-delay: 2.850165368623018s; animation-duration: 3.2576006361742964s;"></div><div class="fischyweb-particle" style="left: 46.109594673468216%; animation-delay: 0.3859602074758044s; animation-duration: 3.8051377999796294s;"></div><div class="fischyweb-particle" style="left: 45.92901107203468%; animation-delay: 1.5243398182131385s; animation-duration: 3.4933903893713447s;"></div><div class="fischyweb-particle" style="left: 53.62963324850328%; animation-delay: 0.6857843579398722s; animation-duration: 2.4916645410740372s;"></div><div class="fischyweb-particle" style="left: 78.76939539812655%; animation-delay: 2.785138286955866s; animation-duration: 2.326384557217857s;"></div><div class="fischyweb-particle" style="left: 31.349248633676453%; animation-delay: 2.7125993803988884s; animation-duration: 3.3522739654277345s;"></div><div class="fischyweb-particle" style="left: 36.14648687182596%; animation-delay: 0.07215284144291101s; animation-duration: 3.6053246481885672s;"></div><div class="fischyweb-particle" style="left: 10.98278571421144%; animation-delay: 0.2878034551340741s; animation-duration: 2.5660753966355814s;"></div><div class="fischyweb-particle" style="left: 43.74552066569286%; animation-delay: 0.7675239094041036s; animation-duration: 3.8662175539789185s;"></div><div class="fischyweb-particle" style="left: 47.48537345125433%; animation-delay: 1.5409609359559573s; animation-duration: 2.710536867483591s;"></div>
-        </div>
-        
-        <div class="fischyweb-logo-container">
-          <div class="fischyweb-logo-ring"></div>
-          <div class="fischyweb-logo-ring"></div>
-          <div class="fischyweb-logo-ring"></div>
-          <div class="fischyweb-logo-icon">⚡</div>
-        </div>
-        
-        <div class="fischyweb-title">Fischyweb</div>
-        <div class="fischyweb-subtitle">Powered by SDK Engine</div>
-        
-        <div class="fischyweb-loading-bar">
-          <div class="fischyweb-loading-progress"></div>
-        </div>
-        
-        <div class="fischyweb-version">v1.0.0</div>
-      `;
+      
+      var style = document.createElement('style');
+      style.textContent = '#fischyweb-startup{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0f0c29 0%,#302b63 50%,#24243e 100%);z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;transition:opacity 0.5s}.fischyweb-logo-container{position:relative;width:100px;height:100px;margin-bottom:24px}.fischyweb-logo-ring{position:absolute;width:100%;height:100%;border:3px solid transparent;border-top-color:#667eea;border-radius:50%;animation:fw-spin 1s linear infinite}.fischyweb-logo-ring:nth-child(2){width:85%;height:85%;top:7.5%;left:7.5%;border-top-color:#764ba2;animation-duration:1.5s;animation-direction:reverse}.fischyweb-logo-ring:nth-child(3){width:70%;height:70%;top:15%;left:15%;border-top-color:#f64f59;animation-duration:2s}.fischyweb-logo-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:32px;animation:fw-pulse 1.5s ease-in-out infinite}@keyframes fw-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes fw-pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(1.1);opacity:0.8}}.fischyweb-title{color:white;font-size:24px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;opacity:0;animation:fw-fadeIn 0.5s ease-out 0.3s forwards}.fischyweb-subtitle{color:rgba(255,255,255,0.6);font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0;animation:fw-fadeIn 0.5s ease-out 0.5s forwards}.fischyweb-loading-bar{width:180px;height:3px;background:rgba(255,255,255,0.1);border-radius:3px;margin-top:24px;overflow:hidden;opacity:0;animation:fw-fadeIn 0.5s ease-out 0.6s forwards}.fischyweb-loading-progress{height:100%;background:linear-gradient(90deg,#667eea,#764ba2,#f64f59);border-radius:3px;animation:fw-loading 1.5s ease-out forwards}@keyframes fw-fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes fw-loading{from{width:0%}to{width:100%}}';
+      document.head.appendChild(style);
+      
+      overlay.innerHTML = '<div class="fischyweb-logo-container"><div class="fischyweb-logo-ring"></div><div class="fischyweb-logo-ring"></div><div class="fischyweb-logo-ring"></div><div class="fischyweb-logo-icon">⚡</div></div><div class="fischyweb-title">Fischyweb</div><div class="fischyweb-subtitle">Powered by SDK Engine</div><div class="fischyweb-loading-bar"><div class="fischyweb-loading-progress"></div></div>';
       
       document.body.appendChild(overlay);
       
-      // Fade out after animation
       setTimeout(function() {
-        overlay.style.animation = 'fischyweb-fadeOut 0.5s ease-out forwards';
+        overlay.style.opacity = '0';
         setTimeout(function() {
           overlay.remove();
           resolve();
@@ -221,159 +91,429 @@
   }
 
   // ============================================
-  // ANTI-COPY PROTECTION
+  // CONTENT PROTECTION
   // ============================================
-  function initProtection() {
-    console.log('[Fischyweb] Initializing protection layer...');
+  function initProtection(level) {
+    level = level || 'medium';
+    console.log('[Fischyweb] Protection level:', level);
     
-    // Detect common bot/scraper patterns
-    var isBot = /bot|crawler|spider|scraper|curl|wget|python|java|headless/i.test(navigator.userAgent);
-    
-    // Block right-click on protected elements
+    var protectStyle = document.createElement('style');
+    protectStyle.id = 'fischyweb-protection-styles';
+    protectStyle.textContent = '[data-fw-protected],[data-fischyweb-protected]{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}[data-fw-protected] img,[data-fischyweb-protected] img{pointer-events:none;-webkit-user-drag:none;user-drag:none}';
+    document.head.appendChild(protectStyle);
+
+    // Block right-click
     document.addEventListener('contextmenu', function(e) {
-      if (e.target.closest('[data-fischyweb-protected]') || document.body.hasAttribute('data-fischyweb-protected')) {
+      if (e.target.closest('[data-fw-protected]') || e.target.closest('[data-fischyweb-protected]') || document.body.hasAttribute('data-fw-protected')) {
         e.preventDefault();
-        showProtectionWarning('Right-click disabled');
+        showToast('🛡️ Right-click is disabled', 'warning');
         return false;
       }
-    });
-    
-    // Block text selection on protected elements
+    }, true);
+
+    // Block text selection
     document.addEventListener('selectstart', function(e) {
-      if (e.target.closest('[data-fischyweb-protected]') || document.body.hasAttribute('data-fischyweb-protected')) {
+      if (e.target.closest('[data-fw-protected]') || e.target.closest('[data-fischyweb-protected]') || document.body.hasAttribute('data-fw-protected')) {
         e.preventDefault();
         return false;
       }
-    });
-    
-    // Block common keyboard shortcuts for copying/saving
+    }, true);
+
+    // Block copy
+    document.addEventListener('copy', function(e) {
+      if (document.body.hasAttribute('data-fw-protected')) {
+        e.preventDefault();
+        showToast('🛡️ Copying is disabled', 'warning');
+        return false;
+      }
+    }, true);
+
+    // Block keyboard shortcuts
     document.addEventListener('keydown', function(e) {
-      var isProtected = document.body.hasAttribute('data-fischyweb-protected');
-      if (!isProtected) return;
+      if (!document.body.hasAttribute('data-fw-protected') && level !== 'high') return;
       
-      // Block Ctrl+S, Ctrl+U, Ctrl+Shift+I, F12
-      if ((e.ctrlKey && (e.key === 's' || e.key === 'u')) || 
-          (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-          e.key === 'F12') {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'u' || e.key === 'p')) {
         e.preventDefault();
-        showProtectionWarning('This action is disabled');
+        showToast('🛡️ This action is disabled', 'warning');
         return false;
       }
-      
-      // Block Ctrl+C on protected content
-      if (e.ctrlKey && e.key === 'c') {
-        var selection = window.getSelection();
-        if (selection.anchorNode && selection.anchorNode.parentElement) {
-          if (selection.anchorNode.parentElement.closest('[data-fischyweb-protected]')) {
-            e.preventDefault();
-            showProtectionWarning('Copying disabled');
-            return false;
-          }
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))) {
+        if (level === 'high') {
+          e.preventDefault();
+          showToast('🛡️ Developer tools disabled', 'warning');
+          return false;
         }
       }
-    });
-    
-    // Block drag on images
+    }, true);
+
+    // Block image drag
     document.addEventListener('dragstart', function(e) {
-      if (e.target.tagName === 'IMG' && 
-          (e.target.closest('[data-fischyweb-protected]') || document.body.hasAttribute('data-fischyweb-protected'))) {
+      if (e.target.tagName === 'IMG' && (e.target.closest('[data-fw-protected]') || document.body.hasAttribute('data-fw-protected'))) {
         e.preventDefault();
         return false;
       }
-    });
-    
-    // Anti-iframe embedding (clickjacking protection)
-    if (window.top !== window.self) {
-      try {
-        if (!document.referrer.includes(window.location.hostname)) {
-          console.warn('[Fischyweb] Possible iframe embedding detected');
+    }, true);
+
+    console.log('[Fischyweb] Protection initialized');
+  }
+
+  // ============================================
+  // SCROLL ANIMATIONS
+  // ============================================
+  function initScrollAnimations() {
+    var style = document.createElement('style');
+    style.id = 'fischyweb-scroll-animations';
+    style.textContent = '[data-fw-animate]{opacity:0;transition:all 0.6s cubic-bezier(0.4,0,0.2,1)}[data-fw-animate].fw-visible{opacity:1}[data-fw-animate="fade-up"]{transform:translateY(40px)}[data-fw-animate="fade-up"].fw-visible{transform:translateY(0)}[data-fw-animate="fade-down"]{transform:translateY(-40px)}[data-fw-animate="fade-down"].fw-visible{transform:translateY(0)}[data-fw-animate="fade-left"]{transform:translateX(40px)}[data-fw-animate="fade-left"].fw-visible{transform:translateX(0)}[data-fw-animate="fade-right"]{transform:translateX(-40px)}[data-fw-animate="fade-right"].fw-visible{transform:translateX(0)}[data-fw-animate="zoom-in"]{transform:scale(0.8)}[data-fw-animate="zoom-in"].fw-visible{transform:scale(1)}[data-fw-animate="zoom-out"]{transform:scale(1.2)}[data-fw-animate="zoom-out"].fw-visible{transform:scale(1)}[data-fw-animate="flip"]{transform:perspective(500px) rotateY(90deg)}[data-fw-animate="flip"].fw-visible{transform:perspective(500px) rotateY(0)}[data-fw-animate="bounce"]{transform:translateY(40px)}[data-fw-animate="bounce"].fw-visible{animation:fw-bounce 0.6s}@keyframes fw-bounce{0%{transform:translateY(40px)}50%{transform:translateY(-10px)}100%{transform:translateY(0)}}';
+    document.head.appendChild(style);
+
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var delay = entry.target.getAttribute('data-fw-delay') || 0;
+          setTimeout(function() {
+            entry.target.classList.add('fw-visible');
+          }, parseInt(delay));
         }
-      } catch(e) {}
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('[data-fw-animate]').forEach(function(el) {
+      observer.observe(el);
+    });
+
+    // Re-observe on new elements
+    new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        m.addedNodes.forEach(function(node) {
+          if (node.nodeType === 1) {
+            if (node.hasAttribute && node.hasAttribute('data-fw-animate')) {
+              observer.observe(node);
+            }
+            node.querySelectorAll && node.querySelectorAll('[data-fw-animate]').forEach(function(el) {
+              observer.observe(el);
+            });
+          }
+        });
+      });
+    }).observe(document.body, { childList: true, subtree: true });
+
+    console.log('[Fischyweb] Scroll animations initialized');
+  }
+
+  // ============================================
+  // PARALLAX EFFECTS
+  // ============================================
+  function initParallax() {
+    var parallaxElements = [];
+
+    function updateParallax() {
+      var scrollY = window.pageYOffset;
+      parallaxElements.forEach(function(item) {
+        var speed = parseFloat(item.el.getAttribute('data-fw-parallax')) || 0.5;
+        var yPos = -(scrollY * speed);
+        item.el.style.transform = 'translate3d(0, ' + yPos + 'px, 0)';
+      });
+    }
+
+    function collectElements() {
+      parallaxElements = [];
+      document.querySelectorAll('[data-fw-parallax]').forEach(function(el) {
+        parallaxElements.push({ el: el });
+      });
+    }
+
+    collectElements();
+    window.addEventListener('scroll', throttle(updateParallax, 16), { passive: true });
+    window.addEventListener('resize', debounce(collectElements, 200));
+
+    console.log('[Fischyweb] Parallax initialized');
+  }
+
+  // ============================================
+  // LAZY LOADING WITH BLUR-UP
+  // ============================================
+  function initLazyLoad() {
+    var style = document.createElement('style');
+    style.id = 'fischyweb-lazy-styles';
+    style.textContent = '[data-fw-src]{filter:blur(20px);transition:filter 0.5s}[data-fw-src].fw-loaded{filter:blur(0)}';
+    document.head.appendChild(style);
+
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var img = entry.target;
+          var src = img.getAttribute('data-fw-src');
+          if (src) {
+            img.src = src;
+            img.onload = function() {
+              img.classList.add('fw-loaded');
+              img.removeAttribute('data-fw-src');
+            };
+          }
+          observer.unobserve(img);
+        }
+      });
+    }, { rootMargin: '100px' });
+
+    document.querySelectorAll('[data-fw-src]').forEach(function(img) {
+      observer.observe(img);
+    });
+
+    console.log('[Fischyweb] Lazy loading initialized');
+  }
+
+  // ============================================
+  // TOOLTIP SYSTEM
+  // ============================================
+  function initTooltips() {
+    var style = document.createElement('style');
+    style.id = 'fischyweb-tooltip-styles';
+    style.textContent = '.fw-tooltip{position:fixed;background:#1e293b;color:white;padding:8px 12px;border-radius:6px;font-size:13px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;z-index:999999;pointer-events:none;opacity:0;transform:translateY(5px);transition:all 0.2s;max-width:250px;box-shadow:0 4px 12px rgba(0,0,0,0.15)}.fw-tooltip.fw-show{opacity:1;transform:translateY(0)}.fw-tooltip::after{content:"";position:absolute;border:6px solid transparent}.fw-tooltip.fw-top::after{top:100%;left:50%;transform:translateX(-50%);border-top-color:#1e293b}.fw-tooltip.fw-bottom::after{bottom:100%;left:50%;transform:translateX(-50%);border-bottom-color:#1e293b}';
+    document.head.appendChild(style);
+
+    var tooltip = document.createElement('div');
+    tooltip.className = 'fw-tooltip fw-top';
+    document.body.appendChild(tooltip);
+
+    document.addEventListener('mouseenter', function(e) {
+      var target = e.target.closest('[data-fw-tooltip]');
+      if (!target) return;
+      
+      var text = target.getAttribute('data-fw-tooltip');
+      var pos = target.getAttribute('data-fw-tooltip-pos') || 'top';
+      var rect = target.getBoundingClientRect();
+      
+      tooltip.textContent = text;
+      tooltip.className = 'fw-tooltip fw-' + pos;
+      
+      var left = rect.left + rect.width / 2;
+      var top = pos === 'bottom' ? rect.bottom + 10 : rect.top - 10;
+      
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
+      tooltip.style.transform = 'translateX(-50%)' + (pos === 'bottom' ? '' : ' translateY(-100%)');
+      
+      setTimeout(function() { tooltip.classList.add('fw-show'); }, 10);
+    }, true);
+
+    document.addEventListener('mouseleave', function(e) {
+      if (e.target.closest('[data-fw-tooltip]')) {
+        tooltip.classList.remove('fw-show');
+      }
+    }, true);
+
+    console.log('[Fischyweb] Tooltips initialized');
+  }
+
+  // ============================================
+  // TOAST NOTIFICATIONS
+  // ============================================
+  function showToast(message, type) {
+    type = type || 'info';
+    var colors = {
+      info: '#3b82f6',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444'
+    };
+
+    var toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;top:20px;right:20px;background:white;color:#1e293b;padding:14px 20px;border-radius:10px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;z-index:2147483646;box-shadow:0 4px 20px rgba(0,0,0,0.15);border-left:4px solid ' + colors[type] + ';opacity:0;transform:translateX(20px);transition:all 0.3s';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(function() {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(0)';
+    }, 10);
+
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(20px)';
+      setTimeout(function() { toast.remove(); }, 300);
+    }, 3000);
+  }
+
+  // ============================================
+  // BACK TO TOP BUTTON
+  // ============================================
+  function initBackToTop() {
+    var btn = document.createElement('button');
+    btn.id = 'fw-back-to-top';
+    btn.innerHTML = '↑';
+    btn.style.cssText = 'position:fixed;bottom:90px;right:20px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;cursor:pointer;font-size:20px;opacity:0;visibility:hidden;transition:all 0.3s;z-index:999998;box-shadow:0 4px 12px rgba(102,126,234,0.4)';
+    document.body.appendChild(btn);
+
+    btn.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    btn.addEventListener('mouseenter', function() {
+      btn.style.transform = 'scale(1.1)';
+    });
+    btn.addEventListener('mouseleave', function() {
+      btn.style.transform = 'scale(1)';
+    });
+
+    window.addEventListener('scroll', throttle(function() {
+      if (window.pageYOffset > 300) {
+        btn.style.opacity = '1';
+        btn.style.visibility = 'visible';
+      } else {
+        btn.style.opacity = '0';
+        btn.style.visibility = 'hidden';
+      }
+    }, 100), { passive: true });
+
+    console.log('[Fischyweb] Back to top initialized');
+  }
+
+  // ============================================
+  // READING PROGRESS BAR
+  // ============================================
+  function initProgressBar() {
+    var bar = document.createElement('div');
+    bar.id = 'fw-progress-bar';
+    bar.style.cssText = 'position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#667eea,#764ba2,#f64f59);z-index:2147483645;width:0%;transition:width 0.1s';
+    document.body.appendChild(bar);
+
+    window.addEventListener('scroll', throttle(function() {
+      var scrollTop = window.pageYOffset;
+      var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      bar.style.width = progress + '%';
+    }, 16), { passive: true });
+
+    console.log('[Fischyweb] Progress bar initialized');
+  }
+
+  // ============================================
+  // DARK MODE TOGGLE
+  // ============================================
+  function initDarkMode() {
+    var style = document.createElement('style');
+    style.id = 'fischyweb-darkmode-styles';
+    style.textContent = 'body.fw-dark{background:#0f172a!important;color:#e2e8f0!important}body.fw-dark *{border-color:#334155!important}body.fw-dark a{color:#93c5fd}body.fw-dark img{opacity:0.9}';
+    document.head.appendChild(style);
+
+    // Check saved preference
+    if (localStorage.getItem('fw-dark') === 'true') {
+      document.body.classList.add('fw-dark');
+    }
+
+    console.log('[Fischyweb] Dark mode initialized');
+  }
+
+  function toggleDarkMode() {
+    document.body.classList.toggle('fw-dark');
+    localStorage.setItem('fw-dark', document.body.classList.contains('fw-dark'));
+    showToast(document.body.classList.contains('fw-dark') ? '🌙 Dark mode enabled' : '☀️ Light mode enabled', 'info');
+  }
+
+  // ============================================
+  // TYPEWRITER EFFECT
+  // ============================================
+  function typewriter(element, text, speed) {
+    speed = speed || 50;
+    element.textContent = '';
+    var i = 0;
+    var timer = setInterval(function() {
+      if (i < text.length) {
+        element.textContent += text.charAt(i);
+        i++;
+      } else {
+        clearInterval(timer);
+      }
+    }, speed);
+    return timer;
+  }
+
+  // ============================================
+  // LIGHTBOX / MODAL
+  // ============================================
+  function initLightbox() {
+    var style = document.createElement('style');
+    style.id = 'fischyweb-lightbox-styles';
+    style.textContent = '.fw-lightbox{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2147483646;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:all 0.3s}.fw-lightbox.fw-open{opacity:1;visibility:visible}.fw-lightbox img{max-width:90%;max-height:90%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);transform:scale(0.9);transition:transform 0.3s}.fw-lightbox.fw-open img{transform:scale(1)}.fw-lightbox-close{position:absolute;top:20px;right:20px;width:40px;height:40px;background:white;border:none;border-radius:50%;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center}';
+    document.head.appendChild(style);
+
+    var lightbox = document.createElement('div');
+    lightbox.className = 'fw-lightbox';
+    lightbox.innerHTML = '<button class="fw-lightbox-close">×</button><img src="" alt="">';
+    document.body.appendChild(lightbox);
+
+    var img = lightbox.querySelector('img');
+    var closeBtn = lightbox.querySelector('.fw-lightbox-close');
+
+    document.addEventListener('click', function(e) {
+      var trigger = e.target.closest('[data-fw-lightbox]');
+      if (trigger) {
+        var src = trigger.getAttribute('data-fw-lightbox') || trigger.src;
+        img.src = src;
+        lightbox.classList.add('fw-open');
+      }
+    });
+
+    closeBtn.addEventListener('click', function() {
+      lightbox.classList.remove('fw-open');
+    });
+
+    lightbox.addEventListener('click', function(e) {
+      if (e.target === lightbox) {
+        lightbox.classList.remove('fw-open');
+      }
+    });
+
+    console.log('[Fischyweb] Lightbox initialized');
+  }
+
+  // ============================================
+  // COUNTER ANIMATION
+  // ============================================
+  function animateCounter(element, target, duration) {
+    duration = duration || 2000;
+    var start = 0;
+    var startTime = null;
+    
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      var value = Math.floor(progress * target);
+      element.textContent = value.toLocaleString();
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        element.textContent = target.toLocaleString();
+      }
     }
     
-    // Obfuscate content periodically (makes scraping harder)
-    setInterval(function() {
-      document.querySelectorAll('[data-fischyweb-protected]').forEach(function(el) {
-        el.setAttribute('data-fischyweb-ts', Date.now());
+    requestAnimationFrame(step);
+  }
+
+  function initCounters() {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          var target = parseInt(el.getAttribute('data-fw-counter')) || 0;
+          var duration = parseInt(el.getAttribute('data-fw-duration')) || 2000;
+          animateCounter(el, target, duration);
+          observer.unobserve(el);
+        }
       });
-    }, 5000);
-    
-    // Disable print screen message
-    document.addEventListener('keyup', function(e) {
-      if (e.key === 'PrintScreen' && document.body.hasAttribute('data-fischyweb-protected')) {
-        showProtectionWarning('Screenshots are discouraged');
-      }
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('[data-fw-counter]').forEach(function(el) {
+      observer.observe(el);
     });
-    
-    // Console warning
-    console.log('%c⚠️ FISCHYWEB PROTECTED', 'font-size: 24px; font-weight: bold; color: #f64f59;');
-    console.log('%cThis site is protected by Fischyweb SDK. Unauthorized copying or scraping may be detected.', 'font-size: 14px; color: #667eea;');
-    
-    // Detect DevTools (basic)
-    var devtools = { open: false };
-    var threshold = 160;
-    setInterval(function() {
-      var widthThreshold = window.outerWidth - window.innerWidth > threshold;
-      var heightThreshold = window.outerHeight - window.innerHeight > threshold;
-      if (widthThreshold || heightThreshold) {
-        if (!devtools.open && document.body.hasAttribute('data-fischyweb-protected')) {
-          console.log('%c[Fischyweb] DevTools detected', 'color: #f64f59;');
-        }
-        devtools.open = true;
-      } else {
-        devtools.open = false;
-      }
-    }, 500);
-    
-    console.log('[Fischyweb] Protection layer initialized');
-  }
 
-  function showProtectionWarning(msg) {
-    var existing = document.getElementById('fischyweb-protection-warning');
-    if (existing) existing.remove();
-    
-    var warning = document.createElement('div');
-    warning.id = 'fischyweb-protection-warning';
-    warning.innerHTML = `
-      <style>
-        #fischyweb-protection-warning {
-          position: fixed;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: linear-gradient(135deg, #f64f59, #c471ed);
-          color: white;
-          padding: 12px 24px;
-          border-radius: 8px;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          z-index: 2147483646;
-          box-shadow: 0 4px 20px rgba(246, 79, 89, 0.4);
-          animation: fischyweb-warning-in 0.3s ease-out;
-        }
-        @keyframes fischyweb-warning-in {
-          from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-          to { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-      </style>
-      🛡️ ${msg}
-    `;
-    warning.innerHTML = warning.innerHTML.replace('${msg}', msg);
-    document.body.appendChild(warning);
-    
-    setTimeout(function() {
-      warning.remove();
-    }, 2000);
+    console.log('[Fischyweb] Counters initialized');
   }
 
   // ============================================
-  // SMOOTH SCROLLING ENGINE
+  // SMOOTH SCROLL
   // ============================================
-  function initSmoothEngine() {
-    console.log('[Fischyweb] Initializing smooth engine...');
-    
-    // Smooth scroll for anchor links
+  function initSmoothScroll() {
     document.addEventListener('click', function(e) {
       var link = e.target.closest('a[href^="#"]');
       if (link) {
@@ -381,194 +521,42 @@
         var target = document.getElementById(targetId);
         if (target) {
           e.preventDefault();
-          smoothScrollTo(target, 800);
+          var offset = parseInt(link.getAttribute('data-fw-offset')) || 80;
+          var top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+          window.scrollTo({ top: top, behavior: 'smooth' });
         }
       }
     });
-    
-    // Smooth momentum scrolling
-    var scrollState = {
-      target: 0,
-      current: 0,
-      ease: 0.1,
-      rafId: null
-    };
-    
-    // Add smooth class to body for CSS optimization
-    var smoothStyle = document.createElement('style');
-    smoothStyle.id = 'fischyweb-smooth-styles';
-    smoothStyle.textContent = `
-      html {
-        scroll-behavior: smooth;
-      }
-      
-      body.fischyweb-smooth * {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-      
-      body.fischyweb-smooth img {
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
-      }
-      
-      @media (prefers-reduced-motion: no-preference) {
-        body.fischyweb-smooth {
-          scroll-behavior: smooth;
-        }
-        
-        body.fischyweb-smooth .fischyweb-animate {
-          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                      opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-      }
-      
-      /* GPU acceleration for animated elements */
-      body.fischyweb-smooth [data-fischyweb-animated] {
-        will-change: transform, opacity;
-        transform: translateZ(0);
-        backface-visibility: hidden;
-      }
-      
-      /* Smooth image loading */
-      body.fischyweb-smooth img {
-        transition: opacity 0.3s ease;
-      }
-      
-      body.fischyweb-smooth img[data-loaded="false"] {
-        opacity: 0;
-      }
-      
-      body.fischyweb-smooth img[data-loaded="true"] {
-        opacity: 1;
-      }
-    `;
-    document.head.appendChild(smoothStyle);
-    document.body.classList.add('fischyweb-smooth');
-    
-    // Smooth image loading
-    document.querySelectorAll('img').forEach(function(img) {
-      if (!img.complete) {
-        img.setAttribute('data-loaded', 'false');
-        img.onload = function() {
-          img.setAttribute('data-loaded', 'true');
-        };
-      }
-    });
-    
-    // Observe new images
-    var imgObserver = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        mutation.addedNodes.forEach(function(node) {
-          if (node.tagName === 'IMG' && !node.complete) {
-            node.setAttribute('data-loaded', 'false');
-            node.onload = function() {
-              node.setAttribute('data-loaded', 'true');
-            };
-          }
-        });
-      });
-    });
-    imgObserver.observe(document.body, { childList: true, subtree: true });
-    
-    console.log('[Fischyweb] Smooth engine initialized');
-  }
 
-  function smoothScrollTo(target, duration) {
-    var start = window.pageYOffset;
-    var targetPos = target.getBoundingClientRect().top + start - 100;
-    var distance = targetPos - start;
-    var startTime = null;
-    
-    function easeOutCubic(t) {
-      return 1 - Math.pow(1 - t, 3);
-    }
-    
-    function animation(currentTime) {
-      if (startTime === null) startTime = currentTime;
-      var elapsed = currentTime - startTime;
-      var progress = Math.min(elapsed / duration, 1);
-      var ease = easeOutCubic(progress);
-      
-      window.scrollTo(0, start + distance * ease);
-      
-      if (progress < 1) {
-        requestAnimationFrame(animation);
-      }
-    }
-    
-    requestAnimationFrame(animation);
+    console.log('[Fischyweb] Smooth scroll initialized');
   }
 
   // ============================================
-  // PERFORMANCE OPTIMIZER
+  // STICKY ELEMENTS
   // ============================================
-  function initPerformanceOptimizer() {
-    console.log('[Fischyweb] Optimizing performance...');
-    
-    // Lazy load images
-    if ('IntersectionObserver' in window) {
-      var lazyObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-          if (entry.isIntersecting) {
-            var img = entry.target;
-            if (img.dataset.src) {
-              img.src = img.dataset.src;
-              img.removeAttribute('data-src');
-              lazyObserver.unobserve(img);
-            }
-          }
-        });
-      }, { rootMargin: '100px' });
-      
-      document.querySelectorAll('img[data-src]').forEach(function(img) {
-        lazyObserver.observe(img);
-      });
-    }
-    
-    // Defer non-critical animations
-    requestAnimationFrame(function() {
-      document.body.classList.add('fischyweb-loaded');
+  function initSticky() {
+    var style = document.createElement('style');
+    style.id = 'fischyweb-sticky-styles';
+    style.textContent = '[data-fw-sticky]{position:sticky;top:0;z-index:100}[data-fw-sticky].fw-stuck{box-shadow:0 2px 10px rgba(0,0,0,0.1)}';
+    document.head.appendChild(style);
+
+    document.querySelectorAll('[data-fw-sticky]').forEach(function(el) {
+      var offset = parseInt(el.getAttribute('data-fw-sticky')) || 0;
+      el.style.top = offset + 'px';
     });
-    
-    // Reduce layout thrashing
-    var throttle = function(fn, wait) {
-      var time = Date.now();
-      return function() {
-        if ((time + wait - Date.now()) < 0) {
-          fn.apply(this, arguments);
-          time = Date.now();
-        }
-      };
-    };
-    
-    // Throttled scroll handler
-    window.addEventListener('scroll', throttle(function() {
-      document.body.setAttribute('data-scroll-y', Math.round(window.scrollY));
-    }, 100), { passive: true });
-    
-    console.log('[Fischyweb] Performance optimizations applied');
+
+    console.log('[Fischyweb] Sticky elements initialized');
   }
 
   // ============================================
-  // IO Utilities
+  // ZIP PARSER & PACKAGE LOADER
   // ============================================
   var textEncoder = new TextEncoder();
   var textDecoder = new TextDecoder();
   
   function stringToBytes(str) { return textEncoder.encode(str); }
   function bytesToString(bytes) { return textDecoder.decode(bytes); }
-  function bytesToBase64(bytes) {
-    var binary = '';
-    for (var i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  }
 
-  // ============================================
-  // ZIP Parser
-  // ============================================
   function readUint16LE(data, offset) { return data[offset] | (data[offset + 1] << 8); }
   function readUint32LE(data, offset) { 
     return (data[offset] | (data[offset + 1] << 8) | (data[offset + 2] << 16) | (data[offset + 3] << 24)) >>> 0; 
@@ -606,33 +594,22 @@
   }
 
   // ============================================
-  // State Management
+  // STATE & THEME MANAGEMENT
   // ============================================
   var currentThemeStyle = null;
   var appliedPatches = [];
   var originalStates = [];
   var currentPackage = null;
-  var engineConfig = {
-    showStartup: true,
-    enableProtection: true,
-    enableSmooth: true,
-    enableOptimizations: true
-  };
 
-  // ============================================
-  // Theme CSS Functions
-  // ============================================
   function applyTheme(css) {
-    console.log('[Fischyweb] Applying theme CSS...');
     removeTheme();
-    
     var style = document.createElement('style');
     style.id = 'fischyweb-theme-' + Date.now();
     style.setAttribute('data-fischyweb', 'true');
     style.textContent = css;
     document.head.appendChild(style);
     currentThemeStyle = style;
-    console.log('[Fischyweb] Theme applied');
+    showToast('🎨 Theme applied!', 'success');
   }
 
   function removeTheme() {
@@ -642,43 +619,25 @@
     }
   }
 
-  // ============================================
-  // DOM Patch Functions
-  // ============================================
   function applyPatches(patches) {
-    console.log('[Fischyweb] Applying DOM patches...');
     revertPatches();
-    
     patches.forEach(function(patch, idx) {
       try {
         var target = document.querySelector(patch.selector);
         if (!target) return;
-        
         var state = { selector: patch.selector, action: patch.action };
-        
         switch (patch.action) {
           case 'prepend':
           case 'append':
             var div = document.createElement('div');
             div.innerHTML = patch.html || '';
             div.classList.add('fischyweb-patch');
-            div.setAttribute('data-fischyweb-patch', idx);
             if (patch.action === 'prepend') target.prepend(div);
             else target.append(div);
             break;
           case 'add-class':
             var cls = (patch.html || '').trim();
             if (cls) { state.classAdded = cls; target.classList.add(cls); }
-            break;
-          case 'remove-class':
-            var clsRm = (patch.html || '').trim();
-            if (clsRm) { state.classRemoved = clsRm; state.hadClass = target.classList.contains(clsRm); target.classList.remove(clsRm); }
-            break;
-          case 'set-attr':
-            if (patch.attrs) {
-              state.originalAttrs = {};
-              for (var key in patch.attrs) { state.originalAttrs[key] = target.getAttribute(key); target.setAttribute(key, patch.attrs[key]); }
-            }
             break;
           case 'replace':
             state.originalHTML = target.innerHTML;
@@ -689,6 +648,7 @@
         appliedPatches.push(patch);
       } catch (e) { console.error('[Fischyweb] Patch error:', e); }
     });
+    if (patches.length) showToast('🔧 ' + patches.length + ' patches applied!', 'success');
   }
 
   function revertPatches() {
@@ -698,13 +658,6 @@
         var target = document.querySelector(state.selector);
         if (!target) return;
         if (state.classAdded) target.classList.remove(state.classAdded);
-        if (state.classRemoved && state.hadClass) target.classList.add(state.classRemoved);
-        if (state.originalAttrs) {
-          for (var key in state.originalAttrs) {
-            if (state.originalAttrs[key] === null) target.removeAttribute(key);
-            else target.setAttribute(key, state.originalAttrs[key]);
-          }
-        }
         if (state.originalHTML !== undefined) target.innerHTML = state.originalHTML;
       } catch (e) {}
     });
@@ -712,9 +665,6 @@
     originalStates = [];
   }
 
-  // ============================================
-  // Package Loading
-  // ============================================
   function loadPackage(file) {
     return new Promise(function(resolve, reject) {
       var reader = new FileReader();
@@ -722,13 +672,10 @@
         try {
           var files = parseZip(reader.result);
           if (!files['manifest.json']) throw new Error('Invalid package');
-          
           var manifest = JSON.parse(bytesToString(files['manifest.json']));
           var themeCSS = files['theme.css'] ? bytesToString(files['theme.css']) : null;
-          var modHTML = files['mod.html'] ? bytesToString(files['mod.html']) : null;
-          
-          var pkg = { manifest: manifest, themeCSS: themeCSS, modHTML: modHTML, files: files };
-          console.log('[Fischyweb] Package loaded:', manifest.metadata?.name || 'Unknown');
+          var pkg = { manifest: manifest, themeCSS: themeCSS, files: files };
+          currentPackage = pkg;
           resolve(pkg);
         } catch (e) { reject(e); }
       };
@@ -738,217 +685,117 @@
   }
 
   // ============================================
-  // UI Creation
+  // FLOATING UI
   // ============================================
   function createUI() {
     var container = document.createElement('div');
-    container.id = 'fischyweb-loader-ui';
-    container.innerHTML = `
-      <style>
-        #fischyweb-loader-ui { position: fixed; bottom: 20px; right: 20px; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        #fischyweb-loader-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; font-size: 24px; }
-        #fischyweb-loader-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5); }
-        #fischyweb-loader-panel { display: none; position: absolute; bottom: 70px; right: 0; width: 340px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); overflow: hidden; animation: fischySlideUp 0.3s ease; }
-        @keyframes fischySlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        #fischyweb-loader-panel.open { display: block; }
-        .fischyweb-header { padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; justify-content: space-between; align-items: center; }
-        .fischyweb-header h3 { margin: 0; font-size: 18px; font-weight: 600; }
-        .fischyweb-body { padding: 20px; }
-        .fischyweb-dropzone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; background: #f8fafc; }
-        .fischyweb-dropzone:hover { border-color: #667eea; background: #f1f5f9; }
-        .fischyweb-dropzone.dragover { border-color: #667eea; background: #eef2ff; border-style: solid; }
-        .fischyweb-info { margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 12px; border-left: 4px solid #667eea; }
-        .fischyweb-info h4 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1e293b; }
-        .fischyweb-info p { margin: 0; font-size: 13px; color: #64748b; }
-        .fischyweb-actions { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .fischyweb-btn { padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; text-align: center; }
-        .fischyweb-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .fischyweb-btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .fischyweb-btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
-        .fischyweb-btn-secondary { background: #f1f5f9; color: #475569; }
-        .fischyweb-btn-secondary:hover:not(:disabled) { background: #e2e8f0; }
-        .fischyweb-btn-danger { background: #fef2f2; color: #dc2626; grid-column: 1 / -1; }
-        .fischyweb-btn-danger:hover:not(:disabled) { background: #fee2e2; }
-        .fischyweb-status { margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 500; text-align: center; }
-        .fischyweb-status.success { background: #f0fdf4; color: #16a34a; }
-        .fischyweb-status.error { background: #fef2f2; color: #dc2626; }
-        .fischyweb-close-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
-        .fischyweb-close-btn:hover { background: rgba(255,255,255,0.3); }
-        #fischyweb-file-input { display: none; }
-        .fischyweb-badge { display: inline-block; padding: 4px 10px; background: rgba(102, 126, 234, 0.1); color: #667eea; border-radius: 6px; font-size: 11px; font-weight: 600; margin-top: 4px; }
-        .fischyweb-powered { text-align: center; padding: 12px; background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border-top: 1px solid rgba(102,126,234,0.2); font-size: 11px; color: #667eea; }
-      </style>
-      
-      <button id="fischyweb-loader-btn" title="Fischyweb Engine">⚡</button>
-      
-      <div id="fischyweb-loader-panel">
-        <div class="fischyweb-header">
-          <h3>⚡ Fischyweb Engine</h3>
-          <button class="fischyweb-close-btn" id="fischyweb-close-btn">×</button>
-        </div>
-        
-        <div class="fischyweb-body">
-          <div id="fischyweb-dropzone" class="fischyweb-dropzone">
-            <div style="font-size: 40px; margin-bottom: 12px;">📦</div>
-            <div style="font-weight: 600; margin-bottom: 6px; color: #1e293b;">Drop .fischyweb file</div>
-            <div style="font-size: 13px; color: #94a3b8;">or click to browse</div>
-          </div>
-          
-          <input type="file" id="fischyweb-file-input" accept=".fischyweb" />
-          
-          <div id="fischyweb-loaded-info" style="display: none;">
-            <div class="fischyweb-info">
-              <h4 id="fischyweb-pkg-name">Package Name</h4>
-              <p id="fischyweb-pkg-meta">Loading...</p>
-              <span class="fischyweb-badge" id="fischyweb-pkg-status">Ready</span>
-            </div>
-            
-            <div class="fischyweb-actions">
-              <button class="fischyweb-btn fischyweb-btn-primary" id="fischyweb-apply-theme-btn">🎨 Apply Theme</button>
-              <button class="fischyweb-btn fischyweb-btn-secondary" id="fischyweb-apply-patches-btn">🔧 Apply Patches</button>
-            </div>
-            
-            <div class="fischyweb-actions">
-              <button class="fischyweb-btn fischyweb-btn-danger" id="fischyweb-revert-btn">↩️ Revert All</button>
-            </div>
-            
-            <div id="fischyweb-status" class="fischyweb-status" style="display: none;"></div>
-          </div>
-        </div>
-        
-        <div class="fischyweb-powered">
-          🛡️ Protected by Fischyweb SDK v1.0.0
-        </div>
-      </div>
-    `;
-    
+    container.id = 'fischyweb-ui';
+    container.innerHTML = '<style>#fischyweb-ui{position:fixed;bottom:20px;right:20px;z-index:999999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}#fw-btn{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(102,126,234,0.4);font-size:22px;transition:all 0.3s}#fw-btn:hover{transform:scale(1.1)}#fw-panel{display:none;position:absolute;bottom:60px;right:0;width:300px;background:white;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.2);overflow:hidden}#fw-panel.open{display:block;animation:fwSlide 0.3s}@keyframes fwSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.fw-header{padding:16px;background:linear-gradient(135deg,#667eea,#764ba2);color:white}.fw-header h3{margin:0;font-size:16px}.fw-body{padding:16px}.fw-drop{border:2px dashed #cbd5e1;border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s}.fw-drop:hover{border-color:#667eea;background:#f8fafc}.fw-info{margin-top:12px;padding:12px;background:#f8fafc;border-radius:8px;display:none}.fw-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.fw-b{padding:10px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s}.fw-b-p{background:linear-gradient(135deg,#667eea,#764ba2);color:white}.fw-b-s{background:#f1f5f9;color:#475569}.fw-b-d{background:#fef2f2;color:#dc2626;grid-column:1/-1}</style><button id="fw-btn" title="Fischyweb">⚡</button><div id="fw-panel"><div class="fw-header"><h3>⚡ Fischyweb Engine v2.0</h3></div><div class="fw-body"><div id="fw-drop" class="fw-drop"><div style="font-size:32px;margin-bottom:8px">📦</div><div style="font-weight:600;color:#1e293b">Drop .fischyweb file</div><div style="font-size:12px;color:#94a3b8">or click to browse</div></div><input type="file" id="fw-file" accept=".fischyweb" style="display:none"><div id="fw-info" class="fw-info"><strong id="fw-name">Package</strong><p id="fw-meta" style="margin:4px 0 0;font-size:12px;color:#64748b"></p></div><div class="fw-btns" id="fw-btns" style="display:none"><button class="fw-b fw-b-p" id="fw-theme">🎨 Theme</button><button class="fw-b fw-b-s" id="fw-patches">🔧 Patches</button><button class="fw-b fw-b-d" id="fw-revert">↩️ Revert</button></div></div></div>';
     document.body.appendChild(container);
-    
-    // Get elements & bind events
-    var btn = document.getElementById('fischyweb-loader-btn');
-    var panel = document.getElementById('fischyweb-loader-panel');
-    var closeBtn = document.getElementById('fischyweb-close-btn');
-    var dropzone = document.getElementById('fischyweb-dropzone');
-    var fileInput = document.getElementById('fischyweb-file-input');
-    var loadedInfo = document.getElementById('fischyweb-loaded-info');
-    var pkgName = document.getElementById('fischyweb-pkg-name');
-    var pkgMeta = document.getElementById('fischyweb-pkg-meta');
-    var pkgStatus = document.getElementById('fischyweb-pkg-status');
-    var applyThemeBtn = document.getElementById('fischyweb-apply-theme-btn');
-    var applyPatchesBtn = document.getElementById('fischyweb-apply-patches-btn');
-    var revertBtn = document.getElementById('fischyweb-revert-btn');
-    var status = document.getElementById('fischyweb-status');
 
-    function showStatus(msg, isError) {
-      status.textContent = msg;
-      status.className = 'fischyweb-status ' + (isError ? 'error' : 'success');
-      status.style.display = 'block';
-      setTimeout(function() { status.style.display = 'none'; }, 3000);
-    }
+    var btn = document.getElementById('fw-btn');
+    var panel = document.getElementById('fw-panel');
+    var drop = document.getElementById('fw-drop');
+    var fileInput = document.getElementById('fw-file');
+    var info = document.getElementById('fw-info');
+    var btns = document.getElementById('fw-btns');
+    var name = document.getElementById('fw-name');
+    var meta = document.getElementById('fw-meta');
 
     btn.onclick = function() { panel.classList.toggle('open'); };
-    closeBtn.onclick = function() { panel.classList.remove('open'); };
-    dropzone.onclick = function() { fileInput.click(); };
-    
-    dropzone.ondragover = function(e) { e.preventDefault(); dropzone.classList.add('dragover'); };
-    dropzone.ondragleave = function(e) { e.preventDefault(); dropzone.classList.remove('dragover'); };
-    dropzone.ondrop = function(e) { e.preventDefault(); dropzone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
+    drop.onclick = function() { fileInput.click(); };
+    drop.ondragover = function(e) { e.preventDefault(); drop.style.borderColor = '#667eea'; };
+    drop.ondragleave = function() { drop.style.borderColor = '#cbd5e1'; };
+    drop.ondrop = function(e) { e.preventDefault(); drop.style.borderColor = '#cbd5e1'; if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
     fileInput.onchange = function() { if (fileInput.files[0]) handleFile(fileInput.files[0]); };
 
     function handleFile(file) {
       loadPackage(file).then(function(pkg) {
-        currentPackage = pkg;
-        pkgName.textContent = pkg.manifest.metadata?.name || 'Unnamed Package';
-        pkgMeta.textContent = 'v' + (pkg.manifest.metadata?.version || '1.0.0') + (pkg.manifest.metadata?.author ? ' • ' + pkg.manifest.metadata.author : '');
-        var stats = [];
-        if (pkg.themeCSS) stats.push('Theme CSS');
-        if (pkg.manifest.domPatches?.length) stats.push(pkg.manifest.domPatches.length + ' patches');
-        pkgStatus.textContent = stats.join(' • ') || 'Ready';
-        dropzone.style.display = 'none';
-        loadedInfo.style.display = 'block';
-        showStatus('✓ Package loaded!', false);
-      }).catch(function(e) { showStatus('✗ ' + e.message, true); });
+        name.textContent = pkg.manifest.metadata?.name || 'Unnamed';
+        meta.textContent = 'v' + (pkg.manifest.metadata?.version || '1.0');
+        drop.style.display = 'none';
+        info.style.display = 'block';
+        btns.style.display = 'grid';
+        showToast('📦 Package loaded!', 'success');
+      }).catch(function(e) { showToast('❌ ' + e.message, 'error'); });
     }
 
-    applyThemeBtn.onclick = function() {
-      if (currentPackage?.themeCSS) { applyTheme(currentPackage.themeCSS); showStatus('✓ Theme applied!', false); }
-      else showStatus('✗ No theme CSS', true);
+    document.getElementById('fw-theme').onclick = function() {
+      if (currentPackage?.themeCSS) applyTheme(currentPackage.themeCSS);
+      else showToast('No theme CSS', 'warning');
     };
-    applyPatchesBtn.onclick = function() {
-      if (currentPackage?.manifest.domPatches?.length) { applyPatches(currentPackage.manifest.domPatches); showStatus('✓ Patches applied!', false); }
-      else showStatus('✗ No patches', true);
+    document.getElementById('fw-patches').onclick = function() {
+      if (currentPackage?.manifest.domPatches?.length) applyPatches(currentPackage.manifest.domPatches);
+      else showToast('No patches', 'warning');
     };
-    revertBtn.onclick = function() { removeTheme(); revertPatches(); showStatus('✓ Reverted!', false); };
+    document.getElementById('fw-revert').onclick = function() {
+      removeTheme();
+      revertPatches();
+      showToast('↩️ Reverted!', 'info');
+    };
   }
 
   // ============================================
-  // Initialize Engine
+  // INITIALIZATION
   // ============================================
-  async function initEngine(config) {
-    config = config || {};
-    Object.assign(engineConfig, config);
-    
+  function init(userConfig) {
+    Object.assign(config, userConfig || {});
     console.log('[Fischyweb] ⚡ Engine v' + VERSION + ' starting...');
-    
-    // Show startup animation
-    if (engineConfig.showStartup) {
-      await showStartupAnimation();
-    }
-    
-    // Initialize protection
-    if (engineConfig.enableProtection) {
-      initProtection();
-    }
-    
-    // Initialize smooth engine
-    if (engineConfig.enableSmooth) {
-      initSmoothEngine();
-    }
-    
-    // Initialize performance optimizations
-    if (engineConfig.enableOptimizations) {
-      initPerformanceOptimizer();
-    }
-    
-    // Create UI
-    createUI();
-    
-    console.log('[Fischyweb] ⚡ Engine ready!');
+
+    var initPromise = config.showStartup ? showStartupAnimation() : Promise.resolve();
+
+    initPromise.then(function() {
+      if (config.enableProtection) initProtection(config.protectionLevel);
+      if (config.enableScrollAnimations) initScrollAnimations();
+      if (config.enableParallax) initParallax();
+      if (config.enableLazyLoad) initLazyLoad();
+      if (config.enableTooltips) initTooltips();
+      if (config.enableBackToTop) initBackToTop();
+      if (config.enableProgressBar) initProgressBar();
+      if (config.enableDarkMode) initDarkMode();
+      
+      initLightbox();
+      initCounters();
+      initSmoothScroll();
+      initSticky();
+      createUI();
+
+      console.log('[Fischyweb] ⚡ Engine ready!');
+    });
   }
 
-  // ============================================
-  // Auto-initialize on DOM ready
-  // ============================================
+  // Auto-init
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { initEngine(); });
+    document.addEventListener('DOMContentLoaded', function() { init(); });
   } else {
-    initEngine();
+    init();
   }
 
-  // ============================================
   // Public API
-  // ============================================
   window.FischywebEngine = {
     version: VERSION,
-    init: initEngine,
+    init: init,
+    protect: function(sel) {
+      if (sel) document.querySelectorAll(sel).forEach(function(el) { el.setAttribute('data-fw-protected', ''); });
+      else document.body.setAttribute('data-fw-protected', '');
+    },
+    unprotect: function(sel) {
+      if (sel) document.querySelectorAll(sel).forEach(function(el) { el.removeAttribute('data-fw-protected'); });
+      else document.body.removeAttribute('data-fw-protected');
+    },
+    toggleDark: toggleDarkMode,
+    toast: showToast,
+    typewriter: typewriter,
+    animateCounter: animateCounter,
     loadPackage: loadPackage,
     applyTheme: applyTheme,
     removeTheme: removeTheme,
     applyPatches: applyPatches,
     revertPatches: revertPatches,
-    getCurrentPackage: function() { return currentPackage; },
-    protect: function(selector) {
-      if (selector) document.querySelectorAll(selector).forEach(function(el) { el.setAttribute('data-fischyweb-protected', 'true'); });
-      else document.body.setAttribute('data-fischyweb-protected', 'true');
-    },
-    unprotect: function(selector) {
-      if (selector) document.querySelectorAll(selector).forEach(function(el) { el.removeAttribute('data-fischyweb-protected'); });
-      else document.body.removeAttribute('data-fischyweb-protected');
-    },
-    showStartup: showStartupAnimation
+    showStartup: showStartupAnimation,
+    getPackage: function() { return currentPackage; }
   };
 
-  // Legacy API compatibility
   window.FischywebLoader = window.FischywebEngine;
 
 })();
