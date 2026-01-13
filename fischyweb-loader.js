@@ -1,6 +1,6 @@
 /**
  * Fischyweb SDK Engine v1.0.0
- * Professional website enhancement engine with protection
+ * Professional website enhancement engine with pr
  * 
  * Features:
  * - Powered by Fischyweb animated startup
