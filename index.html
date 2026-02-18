@@ -1,166 +1,372 @@
 <!DOCTYPE html>
 <html lang="en">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6837309559013580"
-     crossorigin="anonymous"></script>
 <head>
 <meta charset="utf-8">
 <title>cms.instructure.com</title>
 <link href="https://fonts.cdnfonts.com/css/inter" rel="stylesheet">
 <style>
-/* ---------------------------------------------------- */
-/* 1. Global styling & colours */
-:root{
-  --font:'Inter',sans-serif;
-  --radius:6px;
-  --wrapper:680px;
-  --bg:#fafafa;
-  --primary:#28a745;
-  --primary-d:#218838;
-  --white:#fff;
-  --gray:#f6f6f6;
-  --dark:#222;
-  --red:#d32f2f;
-  --blue:#1976d2;
-  --purple:#7b1fa2;
-
-  /* update-specific colors */
-  --update-text:#333;
-  --muted:#666;
+:root {
+  --font: 'Inter', sans-serif;
+  --radius: 6px;
+  --wrapper: 680px;
+  --bg: #fafafa;
+  --primary: #28a745;
+  --primary-d: #218838;
+  --white: #fff;
+  --gray: #f6f6f6;
+  --dark: #222;
+  --red: #d32f2f;
+  --blue: #1976d2;
+  --purple: #7b1fa2;
+  --update-text: #333;
+  --muted: #666;
 }
-body.dark{
-  --bg:#222;
-  --dark:#fafafa;
-  --white:#222;
-  --gray:#333;
 
-  /* lighter update text in dark mode */
-  --update-text:#e6e6e6;
-  --muted:#bbb;
+body.dark {
+  --bg: #222;
+  --dark: #fafafa;
+  --white: #222;
+  --gray: #333;
+  --update-text: #e6e6e6;
+  --muted: #bbb;
 }
-/* ---------------------------------------------------- */
-/* 2. Reset & base layout */
-*{margin:0;padding:0;box-sizing:border-box;}
-body{
-  font-family:var(--font);background:var(--bg);color:var(--dark);
-  display:flex;justify-content:center;align-items:center;
-  min-height:100vh;overflow:hidden;}
-ul{list-style:disc;padding-left:1.3rem;}
-/* ---------------------------------------------------- */
-/* 3. Login card */
-.card{
-  position:relative;background:var(--white);border-radius:var(--radius);
-  box-shadow:0 4px 12px rgba(0,0,0,.08);padding:2rem;
-  width:100%;max-width:440px;text-align:center;
-  transition:background .3s,box-shadow .3s;}
-h2{margin-bottom:1rem;font-size:1.8rem;color:var(--primary);}
-h3{margin:.7rem 0;font-size:.95rem;color:#555;}
-.input{
-  width:100%;padding:.8rem 1rem;margin:1rem 0;
-  font-size:.95rem;border:1px solid #ccc;border-radius:var(--radius);
-  transition:border-color .2s,box-shadow .2s;}
-.input:focus{
-  outline:none;border-color:var(--primary);
-  box-shadow:0 0 4px var(--primary);}
-.btn{
-  width:100%;padding:.8rem 1rem;font-size:.95rem;
-  color:#fff;background:var(--primary);border:none;
-  border-radius:var(--radius);cursor:pointer;
-  transition:background .2s,transform .1s;}
-.btn:hover{background:var(--primary-d);transform:scale(1.02);}
 
-/* Theme toggle button (small) */
-button.smallBtn{background:#6c757d;color:#fff;padding:.4rem .8rem;
-  border:none;border-radius:6px;margin:0 .3rem;cursor:pointer;font-size:.85rem;}
-button.smallBtn:hover{background:#5a6268;}
-#msg{min-height:1.8rem;margin-top:.75rem;padding:.5rem 1rem;
-  border-radius:var(--radius);font-size:.9rem;
-  display:flex;justify-content:center;align-items:center;}
-#msg.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;}
-/* ---------------------------------------------------- */
-/* 4. Loading spinner */
-#spinner{display:none;margin:1rem auto;text-align:center;}
-@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-
-/* ---------------------------------------------------- */
-/* 5. Post‑login wrapper & vault */
-#wrapper{max-width:var(--wrapper);margin:auto;display:flex;
- flex-direction:column;align-items:center;gap:1rem;}
-pre{background:var(--gray);border-radius:4px;padding:.5rem;
- width:90%;overflow-x:auto;white-space:pre-wrap;}
-input.urlInput{width:90%;border-radius:4px;border:1px solid #ccc;
- padding:.45rem;margin:.5rem 0;font-size:.95rem;}
-.tier{display:inline-block;padding:.25rem .65rem;margin:6px 0;
- color:#fff;font-size:.75rem;border-radius:4px;}
-.tier.overlord{background:var(--red);}
-.tier.standard{background:var(--blue);}
-.tier.friend{background:var(--purple);}
-.tier.gold{background:#ffc107;}
-.tier.silver{background:#cfd8dc;}
-.tier.bronze{background:#795548;}
-.tier.Owner{background:#66e3ff;font-size:80px;
-font-weight:bold;
-background: linear-gradient(90deg, #000000 0%, #1a1a1a 50%, #000000 100%);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-text-shadow: 0 0 5px #000000,0 0 10px #000000,0 0 15px #111;}
-/* BANNED test style */
-.tier.banned{background:#6c757d; color:#fff; font-weight:700;}
-
-/* ---------------------------------------------------- */
-/* Server status & updates */
-#serverStatus, #serverUpdates{background:var(--gray);border-radius:6px;padding:1rem;
- margin-top:1rem;width:90%;max-width:440px;}
-#serverUpdates ul{list-style:none;padding:0; margin:0; display:block;}
-#serverUpdates{max-height:260px; overflow:auto;}
-#serverUpdates li{margin-bottom:.5rem;padding:.5rem;background:var(--white);
- border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.1);}
-
-.update-title{font-weight:700;display:block;margin-bottom:6px; color:var(--dark);}
-.update-message{
-  display:block;
-  color:var(--update-text);
-  white-space:pre-wrap;
-  word-break:break-word;
-  max-height:none;
-  overflow:visible;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-#updatesList .no-updates{font-style:italic;color:var(--muted);padding:.4rem;}
-#serverUpdates .controls{margin-top:6px;display:flex;gap:6px;align-items:center;}
-#updatesHint{color:var(--muted);}
 
-/* ---------------------------------------------------- */
-/* NEW: Full-screen banned overlay */
-.banned-overlay{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--dark);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.card {
+  position: relative;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  padding: 2rem;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+  transition: background .3s, box-shadow .3s;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  color: var(--primary);
+}
+
+h3 {
+  margin: .7rem 0;
+  font-size: .95rem;
+  color: #555;
+}
+
+.input {
+  width: 100%;
+  padding: .8rem 1rem;
+  margin: 1rem 0;
+  font-size: .95rem;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 4px var(--primary);
+}
+
+.btn {
+  width: 100%;
+  padding: .8rem 1rem;
+  font-size: .95rem;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+}
+
+.btn:hover {
+  background: var(--primary-d);
+  transform: scale(1.02);
+}
+
+button.smallBtn {
+  background: #6c757d;
+  color: #fff;
+  padding: .4rem .8rem;
+  border: none;
+  border-radius: 6px;
+  margin: 0 .3rem;
+  cursor: pointer;
+  font-size: .85rem;
+}
+
+button.smallBtn:hover {
+  background: #5a6268;
+}
+
+#msg {
+  min-height: 1.8rem;
+  margin-top: .75rem;
+  padding: .5rem 1rem;
+  border-radius: var(--radius);
+  font-size: .9rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#msg.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+#spinner {
+  display: none;
+  margin: 1rem auto;
+  text-align: center;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+#wrapper {
+  max-width: var(--wrapper);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+pre {
+  background: var(--gray);
+  border-radius: 4px;
+  padding: .5rem;
+  width: 90%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+input.urlInput {
+  width: 90%;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  padding: .45rem;
+  margin: .5rem 0;
+  font-size: .95rem;
+}
+
+.tier {
+  display: inline-block;
+  padding: .25rem .65rem;
+  margin: 6px 0;
+  color: #fff;
+  font-size: .75rem;
+  border-radius: 4px;
+}
+
+.tier.overlord { background: var(--red); }
+.tier.standard { background: var(--blue); }
+.tier.friend { background: var(--purple); }
+.tier.gold { background: #ffc107; }
+.tier.silver { background: #cfd8dc; }
+.tier.bronze { background: #795548; }
+.tier.Owner {
+  background: #66e3ff;
+  font-size: 80px;
+  font-weight: bold;
+  background: linear-gradient(90deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 5px #000000, 0 0 10px #000000, 0 0 15px #111;
+}
+.tier.banned {
+  background: #6c757d;
+  color: #fff;
+  font-weight: 700;
+}
+
+#serverStatus,
+#serverUpdates {
+  background: var(--gray);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+  width: 90%;
+  max-width: 440px;
+}
+
+#serverUpdates ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: block;
+}
+
+#serverUpdates {
+  max-height: 260px;
+  overflow: auto;
+}
+
+#serverUpdates li {
+  margin-bottom: .5rem;
+  padding: .5rem;
+  background: var(--white);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.1);
+}
+
+.update-title {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 6px;
+  color: var(--dark);
+}
+
+.update-message {
+  display: block;
+  color: var(--update-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: none;
+  overflow: visible;
+}
+
+#updatesList .no-updates {
+  font-style: italic;
+  color: var(--muted);
+  padding: .4rem;
+}
+
+#serverUpdates .controls {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+#updatesHint {
+  color: var(--muted);
+}
+
+.banned-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(30,30,30,0.95));
-  z-index:9999999;
+  z-index: 9999999;
   color: #ffdddd;
-  text-align:center;
-  padding:2rem;
+  text-align: center;
+  padding: 2rem;
 }
-.banned-overlay h1{
+
+.banned-overlay h1 {
   font-size: clamp(28px, 10vw, 120px);
-  line-height:1;
-  margin:0;
+  line-height: 1;
+  margin: 0;
   letter-spacing: 1px;
   color: #ff6b6b;
   text-shadow: 0 6px 30px rgba(0,0,0,0.6);
 }
-.banned-overlay p{
-  margin-top:1rem;
-  color:#ffdede;
+
+.banned-overlay p {
+  margin-top: 1rem;
+  color: #ffdede;
   font-size: clamp(14px, 2.5vw, 20px);
+}
+
+.banned-details {
+  margin-top: 16px;
+  color: #ffdede;
+  font-size: clamp(12px, 2.2vw, 16px);
+}
+
+.admin-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.97);
+  z-index: 99999999;
+  color: #0f0;
+  font-family: monospace;
+  padding: 2rem;
+  overflow-y: auto;
+  display: none;
+}
+
+.admin-panel {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #111;
+  border: 1px solid #333;
+  padding: 2rem;
+  border-radius: 4px;
+}
+
+.timeline-item {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-left: 2px solid #0f0;
+  background: #000;
+}
+
+.timestamp {
+  color: #888;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.search-bar {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1.5rem;
+  background: #222;
+  border: 1px solid #333;
+  color: #0f0;
+  font-family: monospace;
+  border-radius: 4px;
+}
+
+.close-admin {
+  background: #333;
+  color: #0f0;
+  border: 1px solid #0f0;
+  padding: 0.8rem 1.5rem;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.close-admin:hover {
+  background: #0f02;
 }
 </style>
 </head>
 <body>
-  <script src="fischyweb-engine.js"></script>
-<!-- normal UI -->
-<!-- Login -->
 <div class="card" id="auth">
   <h2>Authenticate</h2>
   <button id="themeToggle" class="smallBtn" title="Toggle theme">🌙</button>
@@ -170,14 +376,12 @@ text-shadow: 0 0 5px #000000,0 0 10px #000000,0 0 15px #111;}
   <div id="msg" role="alert"></div>
 </div>
 
-<!-- Loading spinner -->
 <div id="spinner">
   <svg width="32" height="32" viewBox="0 0 50 50" style="animation:spin .7s linear infinite;">
     <circle cx="25" cy="25" r="20" fill="none" stroke="#28a745" stroke-width="6"/>
   </svg>
 </div>
 
-<!-- Server status -->
 <div id="serverStatus" style="display:none;">
   <h3>Server Status</h3>
   <p>Health: <span id="srvHealth"></span></p>
@@ -187,7 +391,6 @@ text-shadow: 0 0 5px #000000,0 0 10px #000000,0 0 15px #111;}
   <p>User Count: <span id="srvUsers"></span></p>
 </div>
 
-<!-- Server updates -->
 <div id="serverUpdates">
   <h3>Server Updates</h3>
   <div class="controls">
@@ -198,15 +401,27 @@ text-shadow: 0 0 5px #000000,0 0 10px #000000,0 0 15px #111;}
   <ul id="updatesList"></ul>
 </div>
 
+<div class="admin-overlay" id="adminPanel">
+  <div class="admin-panel">
+    <h2 style="color:#0f0;">SYSTEM AUDIT PANEL</h2>
+    <input type="text" class="search-bar" placeholder="Search events..." id="auditSearch">
+    <div id="auditTimeline"></div>
+    <button class="close-admin" onclick="document.getElementById('adminPanel').style.display='none'">CLOSE PANEL</button>
+  </div>
+</div>
+
 <script>
 const SERVER_URL = "https://keyserver.fischyweb.com/";
-let keyList = [];
-let currentKey = null; // authenticated key
-
 const CACHE_KEY = 'cachedServerUpdates';
 const CACHE_TS_KEY = 'cachedServerUpdatesTs';
-
+const CACHED_KEYS_KEY = 'cachedServerKeys';
+const CACHED_KEYS_TS_KEY = 'cachedServerKeysTs';
+const AUDIT_LOG_KEY = 'systemAuditLog';
 const MAX_UPDATES = 20;
+const MAX_LOG_ENTRIES = 500;
+const MAX_CACHE_AGE = 5 * 60 * 1000;
+const SECRET_COMBO = 'fischisthegoat';
+const SECRET_PASSWORD = 'coltcovefishdarb';
 const RANKS = [
   {id:"overlord", name:"Overlord", features:["Unlimited access","Priority support","2FA by default","Custom branding"]},
   {id:"standard", name:"Standard", features:["Core modules","48‑h support","Basic analytics"]},
@@ -217,48 +432,294 @@ const RANKS = [
   {id:"Owner", name:"Owner", features:["Basic modules","Community forums"]},
 ];
 
-// helpers
-function stripHtml(input){
-  if(!input) return '';
-  try{ const doc = new DOMParser().parseFromString(input,'text/html'); return doc.body ? doc.body.textContent || '' : String(input); }
-  catch(e){ return String(input); }
-}
-function linkifyToFragment(text){
-  const fragment = document.createDocumentFragment();
-  if(!text) return fragment;
-  const urlRegex = /((https?:\/\/|ftp:\/\/)[\w-+&@#/%?=~_|!:,.;()$[\]*'%-]+)/gi;
-  let lastIndex=0,m;
-  while((m=urlRegex.exec(text))!==null){
-    const url = m[0], idx = m.index;
-    if(idx>lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex,idx)));
-    const a = document.createElement('a'); a.href=url; a.textContent=url; a.target='_blank'; a.rel='noopener noreferrer';
-    a.style.color='#1976d2'; a.style.textDecoration='underline';
-    fragment.appendChild(a);
-    lastIndex = idx + url.length;
-  }
-  if(lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-  return fragment;
+let keyList = [];
+let currentKey = null;
+let currentUserData = null;
+let comboBuffer = '';
+
+// Audit System
+function logEvent(eventType, details) {
+  const logs = JSON.parse(localStorage.getItem(AUDIT_LOG_KEY) || '[]');
+  const entry = {
+    timestamp: new Date().toISOString(),
+    eventType,
+    details: typeof details === 'string' ? details : JSON.stringify(details)
+  };
+  logs.push(entry);
+  if(logs.length > MAX_LOG_ENTRIES) logs.shift();
+  localStorage.setItem(AUDIT_LOG_KEY, JSON.stringify(logs));
+  return entry;
 }
 
-function renderUpdatesFromArray(arr, meta){
-  const ul = document.getElementById("updatesList");
-  ul.innerHTML = '';
-  if(!Array.isArray(arr) || arr.length===0){ ul.innerHTML = '<li class="no-updates">No updates available.</li>'; return; }
-  const recent = arr.slice(-MAX_UPDATES).reverse();
-  recent.forEach(u=>{
-    const li = document.createElement('li');
-    const title = document.createElement('span'); title.className='update-title'; title.textContent = (u.title||'Update');
-    const msg = document.createElement('div'); msg.className='update-message';
-    const plain = stripHtml(u.message||'');
-    msg.appendChild(linkifyToFragment(plain));
-    li.appendChild(title); li.appendChild(msg); ul.appendChild(li);
+function displayAuditLogs() {
+  const logs = JSON.parse(localStorage.getItem(AUDIT_LOG_KEY) || '[]').reverse();
+  const container = document.getElementById('auditTimeline');
+  const searchTerm = document.getElementById('auditSearch').value.toLowerCase();
+  container.innerHTML = '';
+  
+  logs.forEach(log => {
+    const logText = JSON.stringify(log).toLowerCase();
+    if(searchTerm && !logText.includes(searchTerm)) return;
+    
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
+    item.innerHTML = `
+      <div class="timestamp">${new Date(log.timestamp).toLocaleString()}</div>
+      <div><strong style="color:#0f0;">[${log.eventType}]</strong> ${log.details}</div>
+    `;
+    container.appendChild(item);
   });
-  const hint = document.getElementById('updatesHint');
-  hint.textContent = meta && meta.source === 'cache' ? `(showing cached updates from ${meta.cachedAt})` : '(latest shown)';
 }
 
-async function fetchStatus(){
-  try{
+document.getElementById('keyInput').addEventListener('keydown', function(e) {
+  comboBuffer += e.key.toLowerCase();
+  if(comboBuffer.length > SECRET_COMBO.length) comboBuffer = comboBuffer.slice(-SECRET_COMBO.length);
+  
+  if(comboBuffer === SECRET_COMBO) {
+    comboBuffer = '';
+    const password = prompt('ADMIN ACCESS REQUIRED\nEnter security passphrase:');
+    if(password === SECRET_PASSWORD) {
+      logEvent('ADMIN_ACCESS', 'Secret panel accessed');
+      document.getElementById('adminPanel').style.display = 'block';
+      displayAuditLogs();
+      document.getElementById('auditSearch').oninput = displayAuditLogs;
+    } else {
+      logEvent('ADMIN_ACCESS_FAIL', `Failed attempt with password: ${password}`);
+      alert('INVALID SECURITY PASSPHRASE');
+    }
+  }
+});
+
+// Key List Management
+async function fetchKeyList() {
+  const sp = document.getElementById('spinner');
+  const msg = document.getElementById('msg');
+  sp.style.display = 'block';
+  
+  try {
+    const res = await fetch(`${SERVER_URL}/api/keys?t=${Date.now()}`, {
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+    
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    keyList = await res.json();
+    localStorage.setItem(CACHED_KEYS_KEY, JSON.stringify(keyList));
+    localStorage.setItem(CACHED_KEYS_TS_KEY, Date.now().toString());
+    logEvent('CACHE_UPDATE', `Fetched ${keyList.length} keys`);
+  } catch(e) {
+    const cacheTime = parseInt(localStorage.getItem(CACHED_KEYS_TS_KEY) || '0');
+    keyList = JSON.parse(localStorage.getItem(CACHED_KEYS_KEY) || '[]');
+    
+    if(Date.now() - cacheTime < MAX_CACHE_AGE && keyList.length) {
+      msg.className = 'error';
+      msg.textContent = 'Using recently cached keys (offline mode)';
+      setTimeout(() => msg.textContent = '', 3000);
+      logEvent('CACHE_FALLBACK', `Used ${keyList.length} cached keys`);
+    } else {
+      keyList = [];
+      msg.className = 'error';
+      msg.textContent = 'Server unavailable and cache expired';
+      logEvent('CACHE_FAIL', 'No valid keys available');
+    }
+  } finally {
+    sp.style.display = 'none';
+  }
+  
+  return keyList;
+}
+
+async function validateKeyOnServer(key) {
+  try {
+    const res = await fetch(`${SERVER_URL}/api/validate-key`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+    return await res.json();
+  } catch {
+    return { valid: false, online: false };
+  }
+}
+
+// Auth System
+async function doLogin() {
+  const key = document.getElementById('keyInput').value.trim();
+  const msg = document.getElementById('msg');
+  msg.textContent = '';
+  msg.className = '';
+  
+  if(!key) {
+    msg.className = 'error';
+    msg.textContent = 'Enter a key.';
+    return;
+  }
+  
+  logEvent('AUTH_ATTEMPT', `Key: ${key.slice(0, 8)}...`);
+  
+  await fetchKeyList();
+  
+  if(!keyList.length) {
+    msg.className = 'error';
+    msg.textContent = 'No keys available.';
+    return;
+  }
+  
+  let matched = keyList.find(k => k.main === key || k.friend === key);
+  const validation = await validateKeyOnServer(key);
+  
+  if(validation.online && !validation.valid) {
+    msg.className = 'error';
+    msg.textContent = 'Key revoked. Please contact administrator.';
+    logEvent('AUTH_REJECTED', 'Server rejected cached key');
+    return;
+  }
+  
+  if(!matched && validation.valid) matched = validation.user;
+  if(!matched) {
+    msg.className = 'error';
+    msg.textContent = 'Invalid key.';
+    logEvent('AUTH_FAIL', 'Key not found');
+    return;
+  }
+  
+  currentKey = key;
+  currentUserData = matched;
+  logEvent('AUTH_SUCCESS', `User: ${matched.name}`);
+  
+  if(isUserBannedByStorage(matched.name)) {
+    const banData = getUserBanData(matched.name);
+    showBanOverlay(banData?.by || 'Owner', banData?.why || '', banData?.ts || null, banData?.expires || null);
+    logEvent('BAN_ENFORCED', `User: ${matched.name}`);
+    return;
+  }
+  
+  showWelcome(matched, false);
+}
+
+function showWelcome(userData, loggedAsFriend) {
+  currentUserData = userData;
+  const friendKey = Array.from(userData.name).reverse().join('') + '_FischyFriend';
+  const title = loggedAsFriend ? `${userData.name} – Friend` : userData.name;
+  const rankInfo = RANKS.find(r => r.id === userData.rank) || { name: "Unknown", features: [] };
+  const featList = rankInfo.features.map(f => `<li>${f}</li>`).join('');
+  
+  document.body.innerHTML = `
+    <div id="wrapper">
+      <h1>Welcome, ${title}!</h1>
+      <h2>Tier: <span class="tier ${userData.rank}">${rankInfo.name}</span></h2>
+      <input type="text" id="urlInput" class="urlInput" placeholder="Enter a URL to view in about:blank">
+      <button class="smallBtn" id="openUrlBtn">Hide it</button>
+      <button class="smallBtn" id="againBtn">Authenticate again</button>
+    </div>
+  `;
+  
+  if(['overlord', 'Owner'].includes(userData.rank)) {
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'smallBtn';
+    toggleBtn.textContent = 'Show Watermark';
+    toggleBtn.onclick = () => {
+      toggleBtn.textContent = toggleBtn.textContent.includes('Show') 
+        ? 'Hide Watermark' 
+        : 'Show Watermark';
+    };
+    document.getElementById('wrapper').appendChild(toggleBtn);
+  }
+  
+  document.getElementById('openUrlBtn').onclick = () => {
+    const url = document.getElementById('urlInput').value.trim();
+    if(url) openCustomPage(url, false, rankInfo.name);
+  };
+  
+  document.getElementById('againBtn').onclick = () => location.reload();
+}
+
+function openCustomPage(url, watermarkEnabled, watermarkRank) {
+  logEvent('PAGE_VISIT', url);
+  const win = window.open('about:blank');
+  if(!win) {
+    alert('Pop-ups blocked.');
+    return;
+  }
+  
+  win.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <title>cms.instructure.com</title>
+        <style>
+          html, body { margin:0; padding:0; height:100%; }
+          iframe { border:none; width:100%; height:100%; }
+          ${watermarkEnabled ? `
+          #watermark {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            color: rgba(0,0,0,0.2);
+            font-size: 24px;
+            z-index: 9999;
+          }` : ''}
+        </style>
+      </head>
+      <body>
+        ${watermarkEnabled ? `<div id="watermark">FISCHY SYSTEM • ${watermarkRank}</div>` : ''}
+        <iframe src="${url}"></iframe>
+      </body>
+    </html>
+  `);
+  win.document.close();
+}
+
+// Ban System
+function normalizeName(n) { return String(n||'').trim().toLowerCase(); }
+
+function setUserBannedInStorage(name, val, by, why, expiresTs) {
+  const k = 'banned_' + normalizeName(name);
+  if(val) {
+    const obj = { by, why, ts: Date.now(), expires: expiresTs };
+    localStorage.setItem(k, JSON.stringify(obj));
+  } else {
+    localStorage.removeItem(k);
+  }
+}
+
+function getUserBanData(name) {
+  const k = 'banned_' + normalizeName(name);
+  const raw = localStorage.getItem(k);
+  if(!raw) return null;
+  
+  try {
+    const data = JSON.parse(raw);
+    if(data.expires && Date.now() > data.expires) {
+      localStorage.removeItem(k);
+      logEvent('BAN_EXPIRED', name);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function isUserBannedByStorage(name) {
+  return !!getUserBanData(name);
+}
+
+function showBanOverlay(banner, reason, since, until) {
+  document.body.innerHTML = `
+    <div class="banned-overlay">
+      <h1>BANNED BY OWNER</h1>
+      <p class="banned-details">${banner ? 'Banned by: ' + banner : ''}</p>
+      ${reason ? `<p class="banned-details">Reason: ${reason}</p>` : ''}
+      ${since ? `<p class="banned-details">Banned on: ${new Date(since).toLocaleString()}</p>` : ''}
+      ${until ? `<p class="banned-details">Expires: ${new Date(until).toLocaleString()}</p>` : ''}
+    </div>
+  `;
+}
+
+// Server Communication
+async function fetchStatus() {
+  try {
     const res = await fetch(SERVER_URL + "/api/status");
     const data = await res.json();
     document.getElementById("srvHealth").textContent = data.health;
@@ -267,219 +728,87 @@ async function fetchStatus(){
     document.getElementById("srvMem").textContent = data.memory_percent;
     document.getElementById("srvUsers").textContent = data.user_count;
     document.getElementById("serverStatus").style.display = "block";
-  }catch(e){ console.log("Cannot reach server status:", e); }
-}
-
-async function fetchUpdates(forceNetwork=false){
-  const ul = document.getElementById("updatesList");
-  ul.innerHTML = '<li class="no-updates">Loading updates…</li>';
-  try{
-    const res = await fetch(SERVER_URL + "/api/updates", {mode:'cors'});
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const arr = Array.isArray(data) ? data : (data.items || []);
-    try{ localStorage.setItem(CACHE_KEY, JSON.stringify(arr)); localStorage.setItem(CACHE_TS_KEY, Date.now().toString()); } catch(e){}
-    renderUpdatesFromArray(arr,{source:'network'});
-    document.getElementById("serverUpdates").style.display = "block";
-  }catch(e){
-    console.warn("Cannot fetch updates:", e);
-    try{
-      const cached = localStorage.getItem(CACHE_KEY);
-      const ts = localStorage.getItem(CACHE_TS_KEY);
-      if(cached){
-        const arr = JSON.parse(cached);
-        const cachedAt = ts ? new Date(parseInt(ts,10)).toLocaleString() : 'unknown time';
-        renderUpdatesFromArray(arr,{source:'cache', cachedAt});
-        const notice = document.createElement('li'); notice.className='no-updates';
-        notice.textContent = `Unable to fetch latest updates. Showing cached updates from ${cachedAt}.`;
-        const list = document.getElementById('updatesList'); list.insertBefore(notice, list.firstChild);
-        document.getElementById("serverUpdates").style.display = "block";
-      } else {
-        ul.innerHTML = '<li class="no-updates">Unable to fetch updates and no cached updates are available.</li>';
-        document.getElementById("serverUpdates").style.display = "block";
-      }
-    }catch(ex){ ul.innerHTML = '<li class="no-updates">Unable to fetch updates.</li>'; document.getElementById("serverUpdates").style.display = "block"; }
+  } catch {
+    logEvent('STATUS_FAIL', 'Could not fetch server status');
   }
 }
 
-function initUpdatesControls(){
-  document.getElementById('retryUpdates').onclick = ()=>{
-    const btn = document.getElementById('retryUpdates'); btn.textContent='Retrying…'; btn.disabled=true;
-    fetchUpdates(true).finally(()=>{ btn.textContent='Retry'; btn.disabled=false; });
-  };
-  const toggleBtn = document.getElementById('toggleUpdates');
-  toggleBtn.onclick = ()=>{
-    const box = document.getElementById('serverUpdates');
-    if(box.style.display === 'none' || getComputedStyle(box).display === 'none'){ box.style.display='block'; toggleBtn.textContent='Hide'; }
-    else { box.style.display='none'; toggleBtn.textContent='Show'; }
-  };
+async function fetchUpdates() {
+  const ul = document.getElementById("updatesList");
+  ul.innerHTML = '<li class="no-updates">Loading updates...</li>';
+  
+  try {
+    const res = await fetch(SERVER_URL + "/api/updates");
+    let updates = await res.json();
+    localStorage.setItem(CACHE_KEY, JSON.stringify(updates));
+    localStorage.setItem(CACHE_TS_KEY, Date.now().toString());
+    renderUpdates(updates);
+  } catch {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if(cached) {
+      renderUpdates(JSON.parse(cached));
+      const notice = document.createElement('li');
+      notice.className = 'no-updates';
+      notice.textContent = 'Showing cached updates (offline mode)';
+      document.getElementById('updatesList').prepend(notice);
+    } else {
+      ul.innerHTML = '<li class="no-updates">Could not load updates</li>';
+    }
+  }
 }
 
-// Key vault helpers (unchanged)
-function loadVault(){ return localStorage.getItem('keyVault')? JSON.parse(localStorage.getItem('keyVault')): [];}
-function saveVault(v){ localStorage.setItem('keyVault',JSON.stringify(v));}
-function renderVault(){
-  const vault = loadVault();
-  const ul = document.getElementById('keyList'); if(!ul) return; ul.innerHTML='';
-  vault.forEach((k, idx)=>{ const li=document.createElement('li'); li.className='keyItem';
-    li.innerHTML=`<strong class="keyName">${k.name||'Unnamed'}</strong>
-                  <span class="keyDetails">${k.tier} – added ${new Date(k.addedAt).toLocaleString()}</span>
-                  <button class="delBtn" data-i="${idx}" title="Remove">&times;</button>`;
+function renderUpdates(updates) {
+  const ul = document.getElementById("updatesList");
+  ul.innerHTML = '';
+  
+  (updates || []).slice(-MAX_UPDATES).reverse().forEach(u => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span class="update-title">${u.title || 'Update'}</span>
+      <div class="update-message">${u.message || 'No content'}</div>
+    `;
     ul.appendChild(li);
   });
 }
-function promptAddKey(){ const raw = prompt('Enter the key you want to store (leave blank to cancel)'); if(!raw) return; const name = prompt('Optional: give this key a name')||''; if(!/^[a-f0-9]{64}$/.test(raw)){ alert('Invalid key – must be 64 hex characters.'); return;} const tier = raw.split('_')[0]||'Standard'; const vault = loadVault(); vault.push({hash:raw,name,tier,addedAt:Date.now()}); saveVault(vault); renderVault();}
-function deleteKey(i){ if(!confirm('Delete this key?')) return; const vault = loadVault(); vault.splice(i,1); saveVault(vault); renderVault();}
 
-// Login / display logic
-async function sha256Hex(str){ const buf = new TextEncoder().encode(str); const hash = await crypto.subtle.digest('SHA-256', buf); return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
-
-async function showWelcome(userData, loggedAsFriend){
-  // If the user's rank is "standard" we show a full-screen banned message only.
-  if(userData && userData.rank === 'standard'){
-    // Remove everything and show overlay with big banned message.
-    // Using clear body and append overlay so nothing else is interactive.
-    document.body.innerHTML = '';
-    const overlay = document.createElement('div');
-    overlay.className = 'banned-overlay';
-    overlay.innerHTML = `<div><h1>BANED BY OWNER</h1><p>If you think this is a mistake contact the server owner.</p></div>`;
-    document.body.appendChild(overlay);
-    return;
-  }
-
-  // Normal welcome rendering (unchanged)
-  const friendKey = await sha256Hex(userData.name+"_Friend_Key");
-  const title = loggedAsFriend?`${userData.name} – Friend`:userData.name;
-  const rankInfo = RANKS.find(r=>r.id===userData.rank) || {name:"Unknown",features:[]};
-  const keyBlock = loggedAsFriend?'':`
-    <h3>Your key (Friend key to use):</h3>
-    <pre id="friendKey">${friendKey}</pre>
-    <button class="smallBtn" id="copyFriendBtn">Copy Key</button>`;
-  const featList = rankInfo.features.map(f=>`<li>${f}</li>`).join('');
-  const featureBlock = `<div class="features"><h4>Tier Features (${rankInfo.name})</h4><ul>${featList}</ul></div>`;
-  const goodRanks=['overlord','Owner'];
-  let wmEnabled=false;
-
-  document.body.innerHTML=`
-    <div id="wrapper">
-      <h1>Welcome, ${title}!</h1>
-      <h2>Tier: <span class="tier ${userData.rank}">${rankInfo.name}</span></h2>
-      ${keyBlock}
-      <input type="text" id="urlInput" class="urlInput" placeholder="Enter a URL to view in about:blank">
-      <button class="smallBtn" id="openUrlBtn">press me to Hide it</button>
-      <div style="margin-top:1rem;">
-        <p>This rank ${goodRanks.includes(userData.rank)?'can toggle the watermark':'always shows a watermark'}.</p>
-      </div>
-      ${featureBlock}
-      <button class="smallBtn" id="againBtn">Authenticate again</button>
-    </div>
-    <div id="vault">
-      <h3>My Key Vault</h3>
-      <button class="smallBtn" id="addKeyBtn">Add Key</button>
-      <ul id="keyList"></ul>
-    </div>
-  `;
-
-  if(goodRanks.includes(userData.rank)){
-    const toggleBtn=document.createElement('button');
-    toggleBtn.className='smallBtn';
-    toggleBtn.textContent='Show Watermark';
-    toggleBtn.onclick=()=>{ wmEnabled=!wmEnabled; toggleBtn.textContent=wmEnabled?'Hide Watermark':'Show Watermark'; };
-    document.getElementById('wrapper').appendChild(toggleBtn);
-  }
-
-  if(!loggedAsFriend){
-    const copyBtn = document.getElementById('copyFriendBtn');
-    if(copyBtn) copyBtn.onclick=()=>navigator.clipboard.writeText(friendKey).then(()=>alert('Key copied!'));
-  }
-
-  document.getElementById('openUrlBtn').onclick=()=>{ 
-    const url=document.getElementById('urlInput').value.trim();
-    openCustomPage(url, !goodRanks.includes(userData.rank)||wmEnabled, rankInfo.name);
+function initUpdatesControls() {
+  document.getElementById('retryUpdates').onclick = fetchUpdates;
+  document.getElementById('toggleUpdates').onclick = () => {
+    const updatesDiv = document.getElementById('serverUpdates');
+    updatesDiv.style.display = updatesDiv.style.display === 'none' ? 'block' : 'none';
   };
-
-  renderVault();
-  document.getElementById('addKeyBtn').onclick=promptAddKey;
-  document.getElementById('keyList').addEventListener('click',e=>{
-    if(e.target.classList.contains('delBtn')) deleteKey(parseInt(e.target.dataset.i));
-  });
-  document.getElementById('againBtn').onclick=()=>location.reload();
 }
 
-// Fetch key list and login handling
-async function fetchKeyList(){
-  const sp = document.getElementById('spinner');
-  const msg= document.getElementById('msg');
-  if(sp) sp.style.display='block';
-  try{
-    const res = await fetch(SERVER_URL+"/api/keys",{mode:'cors'});
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    keyList = await res.json();
-  }catch(e){
-    console.error('Unable to fetch key list:', e);
-    if(msg){ msg.className='error'; msg.textContent='Unable to reach key list. Try again.'; }
-  }finally{ if(sp) sp.style.display='none'; }
+// Theme System
+function toggleTheme() {
+  document.body.classList.toggle('dark');
+  localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+  updateThemeIcon();
 }
 
-async function doLogin(){
-  const keyEl = document.getElementById('keyInput');
-  const msg = document.getElementById('msg');
-  const key = keyEl ? keyEl.value.trim() : '';
-  if(!key){ if(msg){ msg.className='error'; msg.textContent='Enter a key.'; } return; }
-  if(msg){ msg.textContent=''; msg.className=''; }
-  await fetchKeyList();
-  if(!Array.isArray(keyList) || keyList.length===0){ if(msg){ msg.className='error'; msg.textContent='Key list empty.'; } return; }
-  const matched = keyList.find(k=>k.main===key||k.friend===key);
-  if(!matched){ if(msg){ msg.className='error'; msg.textContent='Unknown key.'; } return; }
-  currentKey = key;
-  showWelcome(matched,false);
+function updateThemeIcon() {
+  document.getElementById('themeToggle').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
 }
 
-document.addEventListener('click', function(e){
-  // no-op to keep page responsive before login
-}, true);
+// Initialize
+document.getElementById('authBtn').onclick = doLogin;
+document.getElementById('keyInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter') doLogin();
+});
+document.getElementById('themeToggle').onclick = toggleTheme;
 
-document.getElementById('authBtn').onclick=doLogin;
-document.getElementById('keyInput').addEventListener('keydown',e=>{ if(e.key==='Enter'){doLogin(); e.preventDefault();} });
+if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+updateThemeIcon();
 
-// updates & init
-setInterval(fetchStatus,5000);
-setInterval(fetchUpdates,10000);
+setInterval(fetchStatus, 5000);
 fetchStatus();
 fetchUpdates();
 initUpdatesControls();
 
-// openCustomPage (unchanged)
-function openCustomPage(url, watermarkEnabled, watermarkRank){
-  if(!url){alert('Enter a URL.');return;}
-  const win=window.open('about:blank','_blank');
-  if(!win){alert('Pop-ups blocked.');return;}
-  const watermarkHTML = watermarkEnabled?`
-    <div id="wmContainer">
-      <div id="wm">FISCHY HIDER</div>
-      <span class="wmRank">${watermarkRank}</span>
-    </div>`:'';
-  win.document.write(`
-    <!doctype html>
-    <html lang="en"><head><meta charset="utf-8"><title>cms.instructure.com</title>
-    <style>
-      html,body{margin:0;padding:0;font-family:Inter,sans-serif;background:#fff;}
-      iframe{border:none;width:100%;height:100vh;}
-      #wmContainer{position:fixed;top:50%;right:10px;transform:translateY(-50%);
-        display:flex;align-items:center;z-index:9999;}
-      #wm{font-size:48px;color:rgba(200,200,200,.6);transform:rotate(90deg);font-weight:bold;}
-      .wmRank{font-size:20px;color:#222;margin-left:15px;transform:rotate(-90deg);}
-    </style></head>
-    <body>${watermarkHTML}<iframe src="${url}"></iframe></body></html>
-  `);
-  win.document.close();
+// Initialize audit log
+if(!localStorage.getItem(AUDIT_LOG_KEY)) {
+  logEvent('SYSTEM_INIT', 'System initialized');
 }
-
-// Theme switcher
-function updateThemeIcon(){ const t = document.getElementById('themeToggle'); if(!t) return; t.textContent = document.body.classList.contains('dark')?'☀️':'🌙'; }
-function toggleTheme(){ document.body.classList.toggle('dark'); localStorage.setItem('darkMode',document.body.classList.contains('dark')); updateThemeIcon(); }
-window.addEventListener('load',()=>{ if(localStorage.getItem('darkMode')==='true') document.body.classList.add('dark'); updateThemeIcon(); });
-document.getElementById('themeToggle').onclick=toggleTheme;
 </script>
 </body>
 </html>
