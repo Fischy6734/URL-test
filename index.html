@@ -364,6 +364,137 @@ input.urlInput {
 .close-admin:hover {
   background: #0f02;
 }
+
+.messages-container {
+  margin: 4px 0;
+  width: 100%;
+  max-width: 440px;
+}
+
+.announcement-box {
+  margin: 4px 0;
+  padding: 12px;
+  background: linear-gradient(135deg, #eef6e6 0%, #e8f5e9 100%);
+  border-radius: 6px;
+  color: #1b5e20;
+  border-left: 3px solid #28a745;
+  box-shadow: 0 1px 4px rgba(40, 167, 69, 0.1);
+  position: relative;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.announcement-box .announcement-title {
+  color: #28a745;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.announcement-box .announcement-title .msg-number {
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.announcement-box .announcement-content {
+  color: #1b5e20;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  margin-bottom: 8px;
+  flex-grow: 1;
+}
+
+.announcement-box .dismiss-btn {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  padding: 0.4rem 0.8rem;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: background 0.2s;
+  width: 100%;
+}
+
+.announcement-box .dismiss-btn:hover {
+  background: #c3e6cb;
+}
+
+body.dark .announcement-box {
+  background: linear-gradient(135deg, #1a3a1a 0%, #0d2b0d 100%);
+  color: #a5d6a7;
+  border-left-color: #28a745;
+}
+
+body.dark .announcement-box .announcement-title {
+  color: #7fd97f;
+}
+
+body.dark .announcement-box .announcement-title .msg-number {
+  color: #bbb;
+}
+
+body.dark .announcement-box .announcement-content {
+  color: #a5d6a7;
+}
+
+body.dark .announcement-box .dismiss-btn {
+  background: #1b5e20;
+  color: #7fd97f;
+  border: 1px solid #2e7d32;
+}
+
+body.dark .announcement-box .dismiss-btn:hover {
+  background: #2e7d32;
+}
+
+.messages-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.messages-nav button {
+  background: #6c757d;
+  color: #fff;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.messages-nav button:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.messages-nav button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.messages-nav .msg-indicator {
+  padding: 0.4rem 0.8rem;
+  background: #e9ecef;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  color: #333;
+  font-weight: 600;
+}
+
+body.dark .messages-nav .msg-indicator {
+  background: #333;
+  color: #bbb;
+}
 </style>
 </head>
 <body>
@@ -417,6 +548,7 @@ const CACHE_TS_KEY = 'cachedServerUpdatesTs';
 const CACHED_KEYS_KEY = 'cachedServerKeys';
 const CACHED_KEYS_TS_KEY = 'cachedServerKeysTs';
 const AUDIT_LOG_KEY = 'systemAuditLog';
+const DISMISSED_MESSAGES_KEY = 'dismissedMessages';
 const MAX_UPDATES = 20;
 const MAX_LOG_ENTRIES = 500;
 const MAX_CACHE_AGE = 5 * 60 * 1000;
@@ -436,8 +568,9 @@ let keyList = [];
 let currentKey = null;
 let currentUserData = null;
 let comboBuffer = '';
+let allUserMessages = [];
+let currentMessageIndex = 0;
 
-// Audit System
 function logEvent(eventType, details) {
   const logs = JSON.parse(localStorage.getItem(AUDIT_LOG_KEY) || '[]');
   const entry = {
@@ -490,7 +623,6 @@ document.getElementById('keyInput').addEventListener('keydown', function(e) {
   }
 });
 
-// Key List Management
 async function fetchKeyList() {
   const sp = document.getElementById('spinner');
   const msg = document.getElementById('msg');
@@ -542,7 +674,170 @@ async function validateKeyOnServer(key) {
   }
 }
 
-// Auth System
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function getDismissedMessages() {
+  const dismissed = JSON.parse(localStorage.getItem(DISMISSED_MESSAGES_KEY) || '{}');
+  const userName = (currentUserData?.name || '').toLowerCase();
+  return dismissed[userName] || [];
+}
+
+function dismissMessage(messageText) {
+  const dismissed = JSON.parse(localStorage.getItem(DISMISSED_MESSAGES_KEY) || '{}');
+  const userName = (currentUserData?.name || '').toLowerCase();
+  if (!dismissed[userName]) dismissed[userName] = [];
+  if (!dismissed[userName].includes(messageText)) {
+    dismissed[userName].push(messageText);
+  }
+  localStorage.setItem(DISMISSED_MESSAGES_KEY, JSON.stringify(dismissed));
+  logEvent('MESSAGE_DISMISSED', `User: ${currentUserData.name}, Message: ${messageText.substring(0, 50)}...`);
+}
+
+function getAllPersonalAnnouncements(userData) {
+  const updatesRaw = localStorage.getItem(CACHE_KEY);
+  let updates = [];
+  if (updatesRaw) {
+    try { updates = JSON.parse(updatesRaw); } catch { }
+  }
+  
+  if (!updates || !Array.isArray(updates)) return [];
+  
+  const normalizedUser = String(userData.name || '').trim().toLowerCase();
+  const messages = [];
+  const dismissed = getDismissedMessages();
+  
+  // Pattern: m [number] Username message
+  for (const update of updates) {
+    if (!update || typeof update.message !== "string") continue;
+    
+    if (!update.message.toLowerCase().startsWith('m ')) continue;
+    
+    const rest = update.message.substring(2).trim();
+    const parts = rest.split(' ');
+    
+    if (parts.length < 3) continue; // Need: number, username, message
+    
+    const msgNum = parseInt(parts[0]);
+    const msgUser = parts[1].trim().toLowerCase();
+    const msgContent = parts.slice(2).join(' ').trim();
+    
+    if (isNaN(msgNum)) continue;
+    
+    if (msgUser === normalizedUser && !dismissed.includes(msgContent)) {
+      messages.push({
+        content: msgContent,
+        number: msgNum,
+        timestamp: update.timestamp || new Date().toISOString()
+      });
+    }
+  }
+  
+  // Sort by message number (highest = newest, lowest = oldest)
+  messages.sort((a, b) => b.number - a.number);
+  
+  return messages;
+}
+
+function isAnnouncementMessage(message) {
+  if (typeof message !== "string") return false;
+  if (!message.toLowerCase().startsWith('m ')) return false;
+  const rest = message.substring(2).trim();
+  const parts = rest.split(' ');
+  if (parts.length < 3) return false;
+  return !isNaN(parseInt(parts[0]));
+}
+
+function displayCurrentMessage() {
+  const container = document.getElementById('messagesContainer');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (allUserMessages.length === 0) {
+    return;
+  }
+  
+  const msg = allUserMessages[currentMessageIndex];
+  const escapedMsg = escapeHtml(msg.content);
+  
+  const msgHtml = `
+    <div class="announcement-box">
+      <div class="announcement-title">
+        <span>📬</span>
+        <span class="msg-number">${currentMessageIndex + 1} / ${allUserMessages.length}</span>
+      </div>
+      <div class="announcement-content">
+        ${escapedMsg}
+      </div>
+      <button class="dismiss-btn" onclick="dismissCurrentMessage()">Dismiss</button>
+    </div>
+  `;
+  
+  container.innerHTML = msgHtml;
+}
+
+function displayMessageNavigator() {
+  const container = document.getElementById('messagesNavContainer');
+  if (!container) return;
+  
+  if (allUserMessages.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  let navHtml = '<div class="messages-nav">';
+  navHtml += `<button onclick="previousMessage()" ${currentMessageIndex === 0 ? 'disabled' : ''}>← Prev</button>`;
+  navHtml += `<span class="msg-indicator">${currentMessageIndex + 1} / ${allUserMessages.length}</span>`;
+  navHtml += `<button onclick="nextMessage()" ${currentMessageIndex === allUserMessages.length - 1 ? 'disabled' : ''}>Next →</button>`;
+  navHtml += '</div>';
+  
+  container.innerHTML = navHtml;
+}
+
+function nextMessage() {
+  if (currentMessageIndex < allUserMessages.length - 1) {
+    currentMessageIndex++;
+    displayCurrentMessage();
+    displayMessageNavigator();
+  }
+}
+
+function previousMessage() {
+  if (currentMessageIndex > 0) {
+    currentMessageIndex--;
+    displayCurrentMessage();
+    displayMessageNavigator();
+  }
+}
+
+function dismissCurrentMessage() {
+  const msg = allUserMessages[currentMessageIndex];
+  dismissMessage(msg.content);
+  allUserMessages.splice(currentMessageIndex, 1);
+  
+  if (allUserMessages.length === 0) {
+    currentMessageIndex = 0;
+    document.getElementById('messagesContainer').innerHTML = '';
+    document.getElementById('messagesNavContainer').innerHTML = '';
+  } else if (currentMessageIndex >= allUserMessages.length) {
+    currentMessageIndex = allUserMessages.length - 1;
+    displayCurrentMessage();
+    displayMessageNavigator();
+  } else {
+    displayCurrentMessage();
+    displayMessageNavigator();
+  }
+}
+
 async function doLogin() {
   const key = document.getElementById('keyInput').value.trim();
   const msg = document.getElementById('msg');
@@ -594,25 +889,37 @@ async function doLogin() {
     return;
   }
   
+  allUserMessages = getAllPersonalAnnouncements(matched);
+  currentMessageIndex = 0;
+  
   showWelcome(matched, false);
 }
 
 function showWelcome(userData, loggedAsFriend) {
   currentUserData = userData;
-  const friendKey = Array.from(userData.name).reverse().join('') + '_FischyFriend';
   const title = loggedAsFriend ? `${userData.name} – Friend` : userData.name;
   const rankInfo = RANKS.find(r => r.id === userData.rank) || { name: "Unknown", features: [] };
-  const featList = rankInfo.features.map(f => `<li>${f}</li>`).join('');
+  
+  const messagesHtml = allUserMessages.length > 0 ? `
+    <div id="messagesNavContainer"></div>
+    <div id="messagesContainer" class="messages-container"></div>
+  ` : '';
   
   document.body.innerHTML = `
     <div id="wrapper">
-      <h1>Welcome, ${title}!</h1>
+      <h1>Welcome, ${escapeHtml(title)}!</h1>
       <h2>Tier: <span class="tier ${userData.rank}">${rankInfo.name}</span></h2>
+      ${messagesHtml}
       <input type="text" id="urlInput" class="urlInput" placeholder="Enter a URL to view in about:blank">
       <button class="smallBtn" id="openUrlBtn">Hide it</button>
       <button class="smallBtn" id="againBtn">Authenticate again</button>
     </div>
   `;
+  
+  if (allUserMessages.length > 0) {
+    displayCurrentMessage();
+    displayMessageNavigator();
+  }
   
   if(['overlord', 'Owner'].includes(userData.rank)) {
     const toggleBtn = document.createElement('button');
@@ -670,7 +977,6 @@ function openCustomPage(url, watermarkEnabled, watermarkRank) {
   win.document.close();
 }
 
-// Ban System
 function normalizeName(n) { return String(n||'').trim().toLowerCase(); }
 
 function setUserBannedInStorage(name, val, by, why, expiresTs) {
@@ -709,25 +1015,26 @@ function showBanOverlay(banner, reason, since, until) {
   document.body.innerHTML = `
     <div class="banned-overlay">
       <h1>BANNED BY OWNER</h1>
-      <p class="banned-details">${banner ? 'Banned by: ' + banner : ''}</p>
-      ${reason ? `<p class="banned-details">Reason: ${reason}</p>` : ''}
+      <p class="banned-details">${banner ? 'Banned by: ' + escapeHtml(banner) : ''}</p>
+      ${reason ? `<p class="banned-details">Reason: ${escapeHtml(reason)}</p>` : ''}
       ${since ? `<p class="banned-details">Banned on: ${new Date(since).toLocaleString()}</p>` : ''}
       ${until ? `<p class="banned-details">Expires: ${new Date(until).toLocaleString()}</p>` : ''}
     </div>
   `;
 }
 
-// Server Communication
 async function fetchStatus() {
   try {
     const res = await fetch(SERVER_URL + "/api/status");
     const data = await res.json();
-    document.getElementById("srvHealth").textContent = data.health;
-    document.getElementById("srvUptime").textContent = data.uptime_seconds + "s";
-    document.getElementById("srvCPU").textContent = data.cpu_percent;
-    document.getElementById("srvMem").textContent = data.memory_percent;
-    document.getElementById("srvUsers").textContent = data.user_count;
-    document.getElementById("serverStatus").style.display = "block";
+    if(document.getElementById("srvHealth")) {
+      document.getElementById("srvHealth").textContent = escapeHtml(String(data.health));
+      document.getElementById("srvUptime").textContent = escapeHtml(String(data.uptime_seconds)) + "s";
+      document.getElementById("srvCPU").textContent = escapeHtml(String(data.cpu_percent));
+      document.getElementById("srvMem").textContent = escapeHtml(String(data.memory_percent));
+      document.getElementById("srvUsers").textContent = escapeHtml(String(data.user_count));
+      document.getElementById("serverStatus").style.display = "block";
+    }
   } catch {
     logEvent('STATUS_FAIL', 'Could not fetch server status');
   }
@@ -761,11 +1068,20 @@ function renderUpdates(updates) {
   const ul = document.getElementById("updatesList");
   ul.innerHTML = '';
   
-  (updates || []).slice(-MAX_UPDATES).reverse().forEach(u => {
+  const filteredUpdates = (updates || []).filter(u => !isAnnouncementMessage(u.message));
+  
+  if (filteredUpdates.length === 0) {
+    ul.innerHTML = '<li class="no-updates">No updates available</li>';
+    return;
+  }
+  
+  filteredUpdates.slice(-MAX_UPDATES).reverse().forEach(u => {
     const li = document.createElement('li');
+    const escapedTitle = escapeHtml(u.title || 'Update');
+    const escapedMsg = escapeHtml(u.message || 'No content');
     li.innerHTML = `
-      <span class="update-title">${u.title || 'Update'}</span>
-      <div class="update-message">${u.message || 'No content'}</div>
+      <span class="update-title">${escapedTitle}</span>
+      <div class="update-message">${escapedMsg}</div>
     `;
     ul.appendChild(li);
   });
@@ -779,7 +1095,6 @@ function initUpdatesControls() {
   };
 }
 
-// Theme System
 function toggleTheme() {
   document.body.classList.toggle('dark');
   localStorage.setItem('darkMode', document.body.classList.contains('dark'));
@@ -790,7 +1105,6 @@ function updateThemeIcon() {
   document.getElementById('themeToggle').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
 }
 
-// Initialize
 document.getElementById('authBtn').onclick = doLogin;
 document.getElementById('keyInput').addEventListener('keydown', e => {
   if(e.key === 'Enter') doLogin();
@@ -805,7 +1119,6 @@ fetchStatus();
 fetchUpdates();
 initUpdatesControls();
 
-// Initialize audit log
 if(!localStorage.getItem(AUDIT_LOG_KEY)) {
   logEvent('SYSTEM_INIT', 'System initialized');
 }
